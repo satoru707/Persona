@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String?
+  image     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  events    Event[]
+  goals     Goal[]
+}
+
+model Event {
+  id                  String    @id @default(uuid())
+  title               String
+  description         String?
+  startTime           DateTime
+  endTime             DateTime
+  isCompleted         Boolean   @default(false)
+  skippedReason       String?
+  skippedIsImportant  Boolean   @default(false)
+  isSpecial           Boolean   @default(false)
+  userId              String
+  user                User      @relation(fields: [userId], references: [id])
+}
+
+model Goal {
+  id           String    @id @default(uuid())
+  title        String
+  description  String?
+  totalDays    Int
+  createdAt    DateTime  @default(now())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+
+  steps        Step[]
+}
+
+model Step {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime
+  isCompleted Boolean   @default(false)
+  goalId      String
+  goal        Goal      @relation(fields: [goalId], references: [id])
+}
