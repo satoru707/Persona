@@ -17,12 +17,12 @@ const prisma = new PrismaClient();
 // Create Express app
 const app = express();
 const port = process.env.PORT || 3000;
-
+const URL = process.env.CLIENT_URL || "http://localhost:5173";
 // Middleware
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: URL,
     credentials: true,
   })
 );
