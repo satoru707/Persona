@@ -28,9 +28,9 @@ router.get("/upcoming", authenticate, async (req, res) => {
     const events = await prisma.event.findMany({
       where: {
         userId: req.user!.id,
-        startTime: {
-          gte: now,
-        },
+        // startTime: {
+        //   gte: now,
+        // },
       },
       orderBy: { startTime: "asc" },
       take: 5, // Limit to 5 upcoming events

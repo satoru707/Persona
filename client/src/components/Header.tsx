@@ -91,10 +91,17 @@ const Header = ({ openSidebar }: HeaderProps) => {
       {/* check internet connection */}
 
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate("/auths/goals")}>
+        <button
+          className="hidden md:inline-flex"
+          onClick={() => navigate("/auths/goals")}
+        >
           <GoalIcon className="h-5 w-5" />
         </button>
-        <button onClick={() => navigate("/auths/timetable")}>
+
+        <button
+          className="hidden md:inline-flex"
+          onClick={() => navigate("/auths/timetable")}
+        >
           <CalendarClock className="h-5 w-5" />
         </button>
         <button
@@ -194,7 +201,7 @@ const Header = ({ openSidebar }: HeaderProps) => {
                 </a>
                 <a
                   href="/auths/settings"
-                  className="block px-4 py-2 text-sm hover:bg-secondary"
+                  className="block px-4 py-2 text-sm hover:bg-secondary md:inline-fle"
                 >
                   Settings
                 </a>
