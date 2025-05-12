@@ -32,7 +32,7 @@ const Dashboard = () => {
     }
     getEvents();
   }, []);
-  console.log(events);
+  // console.log(events);
 
   // Fetch active goals
   useEffect(() => {
