@@ -1,8 +1,16 @@
-import { BellRing, Menu, Moon, Sun } from 'lucide-react';
-import { useThemeStore } from '../store/themeStore';
-import { useAuthStore } from '../store/authStore';
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  BellRing,
+  Menu,
+  Moon,
+  Sun,
+  GoalIcon,
+  CalendarClock,
+} from "lucide-react";
+import { useThemeStore } from "../store/themeStore";
+import { useAuthStore } from "../store/authStore";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   openSidebar: () => void;
@@ -15,24 +23,31 @@ const Header = ({ openSidebar }: HeaderProps) => {
   const [profileOpen, setProfileOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  // console.log(user);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target as Node)
+      ) {
         setNotificationsOpen(false);
       }
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
         setProfileOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
+  const navigate = useNavigate();
   return (
     <header className="py-4 px-6 bg-card border-b border-border flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -43,17 +58,54 @@ const Header = ({ openSidebar }: HeaderProps) => {
           <Menu className="h-5 w-5" />
         </button>
         <h1 className="text-xl font-semibold flex items-center">
-          <span className="text-accent">Time</span>
-          <span className="text-foreground">forge</span>
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-accent"
+          >
+            <path
+              d="M12 8V12L14.5 14.5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M5.6087 19C3.58041 19 2.0016 17.2091 2.0016 15C2.0016 13.1358 3.1232 11.5693 4.72195 11.1469C4.89261 8.32075 7.15425 6 9.99739 6C12.1229 6 13.9532 7.2926 14.8308 9.1206C15.0769 9.04211 15.3348 9 15.6016 9C17.2584 9 18.6016 10.3431 18.6016 12C18.6016 12.2321 18.5739 12.4562 18.5216 12.6693C19.827 13.2784 20.7516 14.5478 20.7516 16C20.7516 18.2091 18.9608 20 16.9325 20H5.6087Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <button onClick={() => navigate("/auths/")}>
+            <span className="text-accent">Time</span>
+            <span className="text-foreground">forge</span>
+          </button>
         </h1>
       </div>
 
+      {/* check internet connection */}
+
       <div className="flex items-center gap-4">
+        <button onClick={() => navigate("/auths/goals")}>
+          <GoalIcon className="h-5 w-5" />
+        </button>
+        <button onClick={() => navigate("/auths/timetable")}>
+          <CalendarClock className="h-5 w-5" />
+        </button>
         <button
           className="p-2 rounded-md hover:bg-secondary"
           onClick={toggleTheme}
         >
-          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          {theme === "dark" ? (
+            <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
+          )}
         </button>
 
         <div className="relative" ref={notificationsRef}>
@@ -64,7 +116,7 @@ const Header = ({ openSidebar }: HeaderProps) => {
             <BellRing className="h-5 w-5" />
             <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-accent"></span>
           </button>
-
+          {/* Notification request to /api/events/upcoming at the backend */}
           <AnimatePresence>
             {notificationsOpen && (
               <motion.div
@@ -78,15 +130,26 @@ const Header = ({ openSidebar }: HeaderProps) => {
                 </div>
                 <div className="max-h-60 overflow-y-auto">
                   <div className="py-2 px-4 hover:bg-secondary">
-                    <p className="text-sm">Daily standup meeting in 15 minutes</p>
-                    <p className="text-xs text-foreground/70 mt-1">10 minutes ago</p>
+                    <p className="text-sm">
+                      Daily standup meeting in 15 minutes
+                    </p>
+                    <p className="text-xs text-foreground/70 mt-1">
+                      10 minutes ago
+                    </p>
                   </div>
                   <div className="py-2 px-4 hover:bg-secondary">
-                    <p className="text-sm">Website redesign goal: Step 3 is due today</p>
-                    <p className="text-xs text-foreground/70 mt-1">1 hour ago</p>
+                    <p className="text-sm">
+                      Website redesign goal: Step 3 is due today
+                    </p>
+                    <p className="text-xs text-foreground/70 mt-1">
+                      1 hour ago
+                    </p>
                   </div>
                 </div>
-                <a href="#" className="block text-center text-sm text-accent py-2 border-t border-border">
+                <a
+                  href="#"
+                  className="block text-center text-sm text-accent py-2 border-t border-border"
+                >
                   View all notifications
                 </a>
               </motion.div>
@@ -100,10 +163,18 @@ const Header = ({ openSidebar }: HeaderProps) => {
             onClick={() => setProfileOpen(!profileOpen)}
           >
             <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-              {user?.name ? user.name.charAt(0) : 'U'}
+              {user?.image ? (
+                <img
+                  className="h-8 w-8 rounded-full"
+                  src={user.image}
+                  alt="Profile"
+                />
+              ) : (
+                user?.name.charAt(0) || "U"
+              )}
             </div>
             <span className="hidden md:block text-sm font-medium">
-              {user?.name || 'User'}
+              {user?.name || "User"}
             </span>
           </button>
 
@@ -115,13 +186,19 @@ const Header = ({ openSidebar }: HeaderProps) => {
                 exit={{ opacity: 0, y: -5 }}
                 className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg py-1 z-10 border border-border"
               >
-                <a href="#" className="block px-4 py-2 text-sm hover:bg-secondary">
+                <a
+                  href="#"
+                  className="block px-4 py-2 text-sm hover:bg-secondary"
+                >
                   Your Profile
                 </a>
-                <a href="#" className="block px-4 py-2 text-sm hover:bg-secondary">
+                <a
+                  href="/auths/settings"
+                  className="block px-4 py-2 text-sm hover:bg-secondary"
+                >
                   Settings
                 </a>
-                <button 
+                <button
                   className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-secondary"
                   onClick={() => useAuthStore.getState().logout()}
                 >

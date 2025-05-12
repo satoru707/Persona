@@ -1,8 +1,12 @@
-import { useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { Calendar, Clock, Plus, X, CheckCircle, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { Event } from "../types";
+import axios from "axios";
+// import { sk } from "date-fns/locale";
 
 // Create base dates for events
 const today = new Date();
@@ -10,83 +14,111 @@ const tomorrow = new Date();
 tomorrow.setDate(today.getDate() + 1);
 
 // Helper function to create event times
-const createEventTime = (date: Date, hours: number, minutes: number) => {
-  const newDate = new Date(date);
-  newDate.setHours(hours, minutes, 0, 0);
-  return newDate;
-};
+// const createEventTime = (date: Date, hours: number, minutes: number) => {
+//   const newDate = new Date(date);
+//   newDate.setHours(hours, minutes, 0, 0);
+//   return newDate;
+// };
 
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    title: "Team Standup",
-    description: "Daily team standup meeting",
-    startTime: createEventTime(today, 10, 0),
-    endTime: createEventTime(today, 10, 30),
-    isCompleted: false,
-    skippedIsImportant: false,
-    isSpecial: false,
-    userId: "1",
-  },
-  {
-    id: "2",
-    title: "Design Review",
-    description: "Review new product designs with stakeholders",
-    startTime: createEventTime(today, 13, 0),
-    endTime: createEventTime(today, 14, 0),
-    isCompleted: false,
-    skippedIsImportant: false,
-    isSpecial: false,
-    userId: "1",
-  },
-  {
-    id: "3",
-    title: "Workout Session",
-    description: "Gym time - focus on cardio",
-    startTime: createEventTime(today, 18, 0),
-    endTime: createEventTime(today, 19, 0),
-    isCompleted: false,
-    skippedIsImportant: false,
-    isSpecial: false,
-    userId: "1",
-  },
-  {
-    id: "4",
-    title: "Project Planning",
-    description: "Quarterly project planning session",
-    startTime: createEventTime(tomorrow, 9, 0),
-    endTime: createEventTime(tomorrow, 11, 0),
-    isCompleted: false,
-    skippedIsImportant: false,
-    isSpecial: false,
-    userId: "1",
-  },
-  {
-    id: "5",
-    title: "Client Meeting",
-    description: "Discuss project requirements with client",
-    startTime: createEventTime(tomorrow, 14, 0),
-    endTime: createEventTime(tomorrow, 15, 30),
-    isCompleted: false,
-    skippedIsImportant: false,
-    isSpecial: false,
-    userId: "1",
-  },
-];
+const BACKURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+// const mockEvents: Event[] = [
+//   {
+//     id: "1",
+//     title: "Team Standup",
+//     description: "Daily team standup meeting",
+//     startTime: createEventTime(today, 10, 0),
+//     endTime: createEventTime(today, 10, 30),
+//     isCompleted: false,
+//     skippedIsImportant: false,
+//     isSpecial: false,
+//     userId: "1",
+//   },
+//   {
+//     id: "2",
+//     title: "Design Review",
+//     description: "Review new product designs with stakeholders",
+//     startTime: createEventTime(today, 13, 0),
+//     endTime: createEventTime(today, 14, 0),
+//     isCompleted: false,
+//     skippedIsImportant: false,
+//     isSpecial: false,
+//     userId: "1",
+//   },
+//   {
+//     id: "3",
+//     title: "Workout Session",
+//     description: "Gym time - focus on cardio",
+//     startTime: createEventTime(today, 18, 0),
+//     endTime: createEventTime(today, 19, 0),
+//     isCompleted: false,
+//     skippedIsImportant: false,
+//     isSpecial: false,
+//     userId: "1",
+//   },
+//   {
+//     id: "4",
+//     title: "Project Planning",
+//     description: "Quarterly project planning session",
+//     startTime: createEventTime(tomorrow, 9, 0),
+//     endTime: createEventTime(tomorrow, 11, 0),
+//     isCompleted: false,
+//     skippedIsImportant: false,
+//     isSpecial: false,
+//     userId: "1",
+//   },
+//   {
+//     id: "5",
+//     title: "Client Meeting",
+//     description: "Discuss project requirements with client",
+//     startTime: createEventTime(tomorrow, 14, 0),
+//     endTime: createEventTime(tomorrow, 15, 30),
+//     isCompleted: false,
+//     skippedIsImportant: false,
+//     isSpecial: false,
+//     userId: "1",
+//   },
+// ];
 
 const Timetable = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [events] = useState<Event[]>(mockEvents);
+  const [events, setEvents] = useState<Event[]>();
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    description: "",
+    startTime: "",
+    endTime: "",
+  });
   const [showNewEventModal, setShowNewEventModal] = useState(false);
   const [showEventDetailsModal, setShowEventDetailsModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [skipps, setSkipps] = useState("");
+  const [show, setShow] = useState(false);
+  // console.log(newEvent, "new event");
+
+  useEffect(() => {
+    //send request to get events to display
+    async function getEvents() {
+      const eve = await axios.get(`${BACKURL}/api/events`);
+      console.log(eve.data);
+
+      setEvents(eve.data);
+    }
+    getEvents();
+  }, [
+    setNewEvent,
+    handleDeleteEvent,
+    handleMarkAsCompleted,
+    handleResetStatus,
+    handleSkipEvent,
+  ]);
 
   // Generate week days
   const startOfCurrentWeek = startOfWeek(selectedDate, { weekStartsOn: 0 });
   const weekDays = [...Array(7)].map((_, i) => addDays(startOfCurrentWeek, i));
 
   // Get events for selected date
-  const eventsForSelectedDate = events.filter((event) =>
+  const eventsForSelectedDate = events?.filter((event) =>
     isSameDay(new Date(event.startTime), selectedDate)
   );
 
@@ -96,6 +128,62 @@ const Timetable = () => {
     setShowEventDetailsModal(true);
   };
 
+  async function handleNewEvent(e: any) {
+    e.preventDefault();
+    console.log("SEND API REQUEST.");
+    if (!newEvent.title || !newEvent.startTime || !newEvent.endTime) {
+      alert("Please fill out all fields");
+      return;
+    }
+    setShowNewEventModal(false);
+    await axios.post(`${BACKURL}/api/events`, newEvent);
+    setNewEvent({
+      title: "",
+      description: "",
+      startTime: "",
+      endTime: "",
+    });
+  }
+
+  async function handleMarkAsCompleted() {
+    //loading icon here
+    if (!selectedEvent) return;
+    await axios.put(`${BACKURL}/api/events/${selectedEvent.id}`, {
+      isCompleted: true,
+    });
+    setShowEventDetailsModal(false);
+    setSelectedEvent(null);
+  }
+
+  async function handleSkipEvent() {
+    //loading icon here
+    setShow(false);
+    if (!selectedEvent) return;
+    await axios.put(`${BACKURL}/api/events/${selectedEvent.id}/skip`, {
+      skippedIsImportant: true,
+      skippedReason: skipps,
+    });
+    setShowEventDetailsModal(false);
+  }
+
+  async function handleResetStatus() {
+    //loading icon here
+    if (!selectedEvent) return;
+    await axios.put(`${BACKURL}/api/events/${selectedEvent.id}/skip`, {
+      isCompleted: false,
+      skippedIsImportant: false,
+      skippedReason: null,
+    });
+    setShowEventDetailsModal(false);
+  }
+
+  async function handleDeleteEvent() {
+    //loading icon here
+    if (!selectedEvent) return;
+    await axios.delete(`${BACKURL}/api/events/${selectedEvent.id}`);
+    setShowEventDetailsModal(false);
+  }
+  //Page begins
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -113,7 +201,7 @@ const Timetable = () => {
       <div className="grid grid-cols-7 gap-2 mb-6">
         {weekDays.map((day, index) => {
           const isSelectedDay = isSameDay(day, selectedDate);
-          const hasEvents = events.some((event) =>
+          const hasEvents = events?.some((event) =>
             isSameDay(new Date(event.startTime), day)
           );
 
@@ -149,7 +237,7 @@ const Timetable = () => {
         <div className="space-y-1">
           {/* Time slots (24 hours) */}
           {[...Array(24)].map((_, hour) => {
-            const hourEvents = eventsForSelectedDate.filter((event) => {
+            const hourEvents = eventsForSelectedDate?.filter((event) => {
               const eventHour = new Date(event.startTime).getHours();
               return eventHour === hour;
             });
@@ -165,9 +253,9 @@ const Timetable = () => {
                     ? "12 PM"
                     : `${hour - 12} PM`}
                 </div>
-
+                {/* Tile component for each event list */}
                 <div className="flex-1 min-h-[60px] border-l border-border pl-4 relative">
-                  {hourEvents.length > 0 ? (
+                  {hourEvents && hourEvents.length > 0 ? (
                     hourEvents.map((event) => (
                       <motion.div
                         key={event.id}
@@ -224,7 +312,7 @@ const Timetable = () => {
         </div>
       </div>
 
-      {/* New Event Modal */}
+      {/* New Event Modal Creating newe events*/}
       {showNewEventModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <motion.div
@@ -236,7 +324,7 @@ const Timetable = () => {
               <h2 className="text-lg font-semibold">New Event</h2>
               <button
                 className="p-1 rounded-full hover:bg-secondary"
-                onClick={() => setShowNewEventModal(false)}
+                onClick={() => (setShowNewEventModal(false), setShow(false))}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -249,6 +337,10 @@ const Timetable = () => {
                   type="text"
                   className="input w-full"
                   placeholder="Event title"
+                  value={newEvent.title}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, title: e.target.value })
+                  } //example
                 />
               </div>
 
@@ -259,6 +351,10 @@ const Timetable = () => {
                 <textarea
                   className="input w-full h-24"
                   placeholder="Event description"
+                  value={newEvent.description}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, description: e.target.value })
+                  }
                 ></textarea>
               </div>
 
@@ -267,14 +363,28 @@ const Timetable = () => {
                   <label className="block text-sm font-medium mb-1">
                     Start Time
                   </label>
-                  <input type="datetime-local" className="input w-full" />
+                  <input
+                    type="datetime-local"
+                    className="input w-full"
+                    value={newEvent.startTime}
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, startTime: e.target.value })
+                    }
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     End Time
                   </label>
-                  <input type="datetime-local" className="input w-full" />
+                  <input
+                    type="datetime-local"
+                    className="input w-full"
+                    value={newEvent.endTime}
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, endTime: e.target.value })
+                    }
+                  />
                 </div>
               </div>
 
@@ -282,14 +392,14 @@ const Timetable = () => {
                 <button
                   type="button"
                   className="btn bg-secondary hover:bg-secondary/90"
-                  onClick={() => setShowNewEventModal(false)}
+                  onClick={() => (setShowNewEventModal(false), setShow(false))}
                 >
                   Cancel
                 </button>
                 <button
-                  type="button"
+                  type="submit"
                   className="btn btn-accent"
-                  onClick={() => setShowNewEventModal(false)}
+                  onClick={(e) => handleNewEvent(e)}
                 >
                   Create Event
                 </button>
@@ -299,7 +409,7 @@ const Timetable = () => {
         </div>
       )}
 
-      {/* Event Details Modal */}
+      {/* Showing events details */}
       {showEventDetailsModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <motion.div
@@ -338,19 +448,45 @@ const Timetable = () => {
               <div className="border-t border-border pt-4 flex space-x-2">
                 {!selectedEvent.isCompleted && !selectedEvent.skippedReason ? (
                   <>
-                    <button className="flex-1 btn bg-success/20 text-success hover:bg-success/30">
+                    <button
+                      onClick={handleMarkAsCompleted}
+                      className="flex-1 btn bg-success/20 text-success hover:bg-success/30"
+                    >
                       Mark as Completed
                     </button>
-                    <button className="flex-1 btn bg-warning/20 text-warning hover:bg-warning/30">
+                    <button
+                      onClick={() => setShow(true)}
+                      className="flex-1 btn bg-warning/20 text-warning hover:bg-warning/30"
+                    >
                       Skip Event
                     </button>
                   </>
                 ) : (
-                  <button className="flex-1 btn bg-secondary hover:bg-secondary/90">
+                  <button
+                    onClick={handleResetStatus}
+                    className="flex-1 btn bg-secondary hover:bg-secondary/90"
+                  >
                     Reset Status
                   </button>
                 )}
               </div>
+              {show && (
+                <>
+                  {" "}
+                  <textarea
+                    className="input w-full h-24"
+                    placeholder="Reason for skipping"
+                    value={skipps}
+                    onChange={(e) => setSkipps(e.target.value)}
+                  ></textarea>
+                  <button
+                    onClick={handleSkipEvent}
+                    className="flex-1 btn bg-warning/20 text-warning hover:bg-warning/30"
+                  >
+                    Submit
+                  </button>
+                </>
+              )}
 
               {selectedEvent.skippedReason && (
                 <div className="bg-warning/10 p-3 rounded-md border border-warning/20">
@@ -374,7 +510,10 @@ const Timetable = () => {
               )}
 
               <div className="flex justify-end space-x-2 pt-2">
-                <button className="btn bg-destructive/20 text-destructive hover:bg-destructive/30">
+                <button
+                  onClick={handleDeleteEvent}
+                  className="btn bg-destructive/20 text-destructive hover:bg-destructive/30"
+                >
                   Delete
                 </button>
                 <button

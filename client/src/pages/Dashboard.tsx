@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "react-query";
+// import { useQuery } from "react-query";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
@@ -11,50 +11,46 @@ import {
   Activity,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Event, Goal, AiSuggestion } from "../types";
+// import {
+//   Event,
+//   Goal,
+//   AiSuggestion,
+// } from "../types";
 import axios from "axios";
 import { API_URL } from "../config";
 import "../index.css";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
-
-  // Fetch upcoming events
-  const { data: events } = useQuery<Event[]>(
-    "upcomingEvents",
-    async () => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [goals, setGoals] = useState([]);
+  const [suggestions, setInsights] = useState([]);
+  useEffect(() => {
+    async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
-      return data;
-    },
-    {
-      enabled: false, // Disable auto-fetching for demo
-      onSettled: () => setLoading(false),
+      setEvents(data);
     }
-  );
+    getEvents();
+  }, []);
+  console.log(events);
 
   // Fetch active goals
-  const { data: goals } = useQuery<Goal[]>(
-    "activeGoals",
-    async () => {
+  useEffect(() => {
+    async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/goals/active`);
-      return data;
-    },
-    {
-      enabled: false, // Disable auto-fetching for demo
+      setGoals(data);
     }
-  );
+    getEvents();
+  }, []);
 
   // Fetch AI suggestions
-  const { data: suggestions } = useQuery<AiSuggestion[]>(
-    "aiSuggestions",
-    async () => {
+  useEffect(() => {
+    async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/ai/suggestions`);
-      return data;
-    },
-    {
-      enabled: false, // Disable auto-fetching for demo
+      setInsights(data);
     }
-  );
+    getEvents();
+  }, []);
   const navigate = useNavigate();
   // Mock data for demo
   useEffect(() => {
@@ -64,122 +60,122 @@ const Dashboard = () => {
   }, []);
 
   // Mock data
-  const mockEvents: Event[] = [
-    {
-      id: "1",
-      title: "Team Standup",
-      description: "Daily team standup meeting",
-      startTime: new Date(new Date().setHours(10, 0, 0, 0)),
-      endTime: new Date(new Date().setHours(10, 30, 0, 0)),
-      isCompleted: false,
-      skippedIsImportant: false,
-      isSpecial: false,
-      userId: "1",
-    },
-    {
-      id: "2",
-      title: "Design Review",
-      description: "Review new product designs with stakeholders",
-      startTime: new Date(new Date().setHours(13, 0, 0, 0)),
-      endTime: new Date(new Date().setHours(14, 0, 0, 0)),
-      isCompleted: false,
-      skippedIsImportant: false,
-      isSpecial: false,
-      userId: "1",
-    },
-    {
-      id: "3",
-      title: "Workout Session",
-      description: "Gym time - focus on cardio",
-      startTime: new Date(new Date().setHours(18, 0, 0, 0)),
-      endTime: new Date(new Date().setHours(19, 0, 0, 0)),
-      isCompleted: false,
-      skippedIsImportant: false,
-      isSpecial: false,
-      userId: "1",
-    },
-  ];
+  // const mockEvents: Event[] = [
+  //   {
+  //     id: "1",
+  //     title: "Team Standup",
+  //     description: "Daily team standup meeting",
+  //     startTime: new Date(new Date().setHours(10, 0, 0, 0)),
+  //     endTime: new Date(new Date().setHours(10, 30, 0, 0)),
+  //     isCompleted: false,
+  //     skippedIsImportant: false,
+  //     isSpecial: false,
+  //     userId: "1",
+  //   },
+  //   {
+  //     id: "2",
+  //     title: "Design Review",
+  //     description: "Review new product designs with stakeholders",
+  //     startTime: new Date(new Date().setHours(13, 0, 0, 0)),
+  //     endTime: new Date(new Date().setHours(14, 0, 0, 0)),
+  //     isCompleted: false,
+  //     skippedIsImportant: false,
+  //     isSpecial: false,
+  //     userId: "1",
+  //   },
+  //   {
+  //     id: "3",
+  //     title: "Workout Session",
+  //     description: "Gym time - focus on cardio",
+  //     startTime: new Date(new Date().setHours(18, 0, 0, 0)),
+  //     endTime: new Date(new Date().setHours(19, 0, 0, 0)),
+  //     isCompleted: false,
+  //     skippedIsImportant: false,
+  //     isSpecial: false,
+  //     userId: "1",
+  //   },
+  // ];
 
-  const mockGoals: Goal[] = [
-    {
-      id: "1",
-      title: "Website Redesign",
-      description: "Complete redesign of company website",
-      totalDays: 30,
-      createdAt: new Date(new Date().setDate(new Date().getDate() - 10)),
-      userId: "1",
-      steps: [
-        {
-          id: "1",
-          title: "Research competitors",
-          description: "Analyze top 5 competitors",
-          dueDate: new Date(new Date().setDate(new Date().getDate() - 7)),
-          isCompleted: true,
-          goalId: "1",
-        },
-        {
-          id: "2",
-          title: "Create wireframes",
-          description: "Design initial wireframes for key pages",
-          dueDate: new Date(new Date().setDate(new Date().getDate() - 2)),
-          isCompleted: true,
-          goalId: "1",
-        },
-        {
-          id: "3",
-          title: "Develop prototype",
-          description: "Build interactive prototype",
-          dueDate: new Date(new Date().setDate(new Date().getDate() + 5)),
-          isCompleted: false,
-          goalId: "1",
-        },
-      ],
-    },
-    {
-      id: "2",
-      title: "Learn Python",
-      description: "Master Python programming language",
-      totalDays: 60,
-      createdAt: new Date(new Date().setDate(new Date().getDate() - 20)),
-      userId: "1",
-      steps: [
-        {
-          id: "4",
-          title: "Complete basics course",
-          description: "Finish Python basics on Codecademy",
-          dueDate: new Date(new Date().setDate(new Date().getDate() - 10)),
-          isCompleted: true,
-          goalId: "2",
-        },
-        {
-          id: "5",
-          title: "Build CLI tool",
-          description: "Create a command-line application",
-          dueDate: new Date(new Date().setDate(new Date().getDate() + 2)),
-          isCompleted: false,
-          goalId: "2",
-        },
-      ],
-    },
-  ];
+  // const mockGoals: Goal[] = [
+  //   {
+  //     id: "1",
+  //     title: "Website Redesign",
+  //     description: "Complete redesign of company website",
+  //     totalDays: 30,
+  //     createdAt: new Date(new Date().setDate(new Date().getDate() - 10)),
+  //     userId: "1",
+  //     steps: [
+  //       {
+  //         id: "1",
+  //         title: "Research competitors",
+  //         description: "Analyze top 5 competitors",
+  //         dueDate: new Date(new Date().setDate(new Date().getDate() - 7)),
+  //         isCompleted: true,
+  //         goalId: "1",
+  //       },
+  //       {
+  //         id: "2",
+  //         title: "Create wireframes",
+  //         description: "Design initial wireframes for key pages",
+  //         dueDate: new Date(new Date().setDate(new Date().getDate() - 2)),
+  //         isCompleted: true,
+  //         goalId: "1",
+  //       },
+  //       {
+  //         id: "3",
+  //         title: "Develop prototype",
+  //         description: "Build interactive prototype",
+  //         dueDate: new Date(new Date().setDate(new Date().getDate() + 5)),
+  //         isCompleted: false,
+  //         goalId: "1",
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     id: "2",
+  //     title: "Learn Python",
+  //     description: "Master Python programming language",
+  //     totalDays: 60,
+  //     createdAt: new Date(new Date().setDate(new Date().getDate() - 20)),
+  //     userId: "1",
+  //     steps: [
+  //       {
+  //         id: "4",
+  //         title: "Complete basics course",
+  //         description: "Finish Python basics on Codecademy",
+  //         dueDate: new Date(new Date().setDate(new Date().getDate() - 10)),
+  //         isCompleted: true,
+  //         goalId: "2",
+  //       },
+  //       {
+  //         id: "5",
+  //         title: "Build CLI tool",
+  //         description: "Create a command-line application",
+  //         dueDate: new Date(new Date().setDate(new Date().getDate() + 2)),
+  //         isCompleted: false,
+  //         goalId: "2",
+  //       },
+  //     ],
+  //   },
+  // ];
 
-  const mockSuggestions: AiSuggestion[] = [
-    {
-      message:
-        "Consider scheduling a 15-minute break after your Design Review meeting to process insights.",
-      type: "schedule",
-    },
-    {
-      message:
-        "Based on your progress, focus on the 'Develop prototype' step of your Website Redesign goal today.",
-      type: "focus",
-    },
-    {
-      message:
-        "You're consistently completing your morning tasks. Great job maintaining your routine!",
-      type: "focus",
-    },
-  ];
+  // const mockSuggestions: AiSuggestion[] = [
+  //   {
+  //     message:
+  //       "Consider scheduling a 15-minute break after your Design Review meeting to process insights.",
+  //     type: "schedule",
+  //   },
+  //   {
+  //     message:
+  //       "Based on your progress, focus on the 'Develop prototype' step of your Website Redesign goal today.",
+  //     type: "focus",
+  //   },
+  //   {
+  //     message:
+  //       "You're consistently completing your morning tasks. Great job maintaining your routine!",
+  //     type: "focus",
+  //   },
+  // ];
 
   return (
     <div>
@@ -214,32 +210,40 @@ const Dashboard = () => {
             </div>
 
             <div className="space-y-4">
-              {(events || mockEvents).slice(0, 3).map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-start gap-3 p-3 bg-secondary rounded-md"
-                >
-                  <div className="min-w-[40px] flex flex-col items-center">
-                    <Clock className="h-5 w-5 text-accent mb-1" />
-                    <span className="text-xs text-foreground/70">
-                      {format(new Date(event.startTime), "HH:mm")}
-                    </span>
+              {events.length > 0 ? (
+                events.slice(0, 3).map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex items-start gap-3 p-3 bg-secondary rounded-md"
+                  >
+                    <div className="min-w-[40px] flex flex-col items-center">
+                      <Clock className="h-5 w-5 text-accent mb-1" />
+                      <span className="text-xs text-foreground/70">
+                        {format(new Date(event.startTime), "HH:mm")}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-medium">{event.title}</h3>
+                      {event.description && (
+                        <p className="text-sm text-foreground/70 mt-1">
+                          {event.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium">{event.title}</h3>
-                    {event.description && (
-                      <p className="text-sm text-foreground/70 mt-1">
-                        {event.description}
-                      </p>
-                    )}
+                ))
+              ) : (
+                <div className="p-3 rounded-md">
+                  <div className="flex justify-center mb-2 items-center text-center">
+                    <h3 className="font-medium">No active event</h3>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
 
             <button
-              onClick={() => navigate("/auths/schedule")}
-              className="w-full mt-4 py-2 text-sm text-accent hover:text-accent/90 transition-colors"
+              onClick={() => navigate("/auths/timetable")}
+              className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors"
             >
               View Full Schedule
             </button>
@@ -257,49 +261,59 @@ const Dashboard = () => {
                 <Target className="h-5 w-5 text-accent" />
                 Active Goals
               </h2>
-              <span className="text-sm text-accent cursor-pointer hover:underline">
-                New Goal
+              <span
+                className="text-sm text-accent cursor-pointer "
+                onClick={() => navigate("/auths/goals")}
+              >
+                {goals ? "Don't sleep on it" : "Create goals"}
               </span>
             </div>
 
             <div className="space-y-4">
-              {(goals || mockGoals).slice(0, 2).map((goal) => {
-                const completedSteps = goal.steps.filter(
-                  (step) => step.isCompleted
-                ).length;
-                const progressPercentage = Math.round(
-                  (completedSteps / goal.steps.length) * 100
-                );
+              {goals.length > 0 ? (
+                goals.slice(0, 2).map((goal) => {
+                  const completedSteps = goal.steps.filter(
+                    (step) => step.isCompleted
+                  ).length;
+                  const progressPercentage = Math.round(
+                    (completedSteps / goal.steps.length) * 100
+                  );
 
-                return (
-                  <div key={goal.id} className="p-3 bg-secondary rounded-md">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium">{goal.title}</h3>
-                      <span className="text-xs px-2 py-1 bg-accent/20 text-accent rounded-full">
-                        {progressPercentage}%
-                      </span>
-                    </div>
+                  return (
+                    <div key={goal.id} className="p-3 bg-secondary rounded-md">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-medium">{goal.title}</h3>
+                        <span className="text-xs px-2 py-1 bg-accent/20 text-accent rounded-full">
+                          {progressPercentage}%
+                        </span>
+                      </div>
 
-                    <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-accent rounded-full transition-all duration-500"
-                        style={{ width: `${progressPercentage}%` }}
-                      ></div>
-                    </div>
+                      <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-accent rounded-full transition-all duration-500"
+                          style={{ width: `${progressPercentage}%` }}
+                        ></div>
+                      </div>
 
-                    <div className="mt-3 text-sm text-foreground/70">
-                      Next step:{" "}
-                      {goal.steps.find((step) => !step.isCompleted)?.title ||
-                        "All steps completed!"}
+                      <div className="mt-3 text-sm text-foreground/70">
+                        Next step:{" "}
+                        {goal.steps.find((step) => !step.isCompleted)?.title ||
+                          "All steps completed!"}
+                      </div>
                     </div>
+                  );
+                })
+              ) : (
+                <div className="p-3  rounded-md">
+                  <div className="flex justify-center mb-2 items-center text-center">
+                    <h3 className="font-medium">No active goals</h3>
                   </div>
-                );
-              })}
+                </div>
+              )}
             </div>
-
             <button
-              onClick={() => navigate("/goals")}
-              className="w-full mt-4 py-2 text-sm text-accent hover:text-accent/90 transition-colors"
+              onClick={() => navigate("/auths/goals")}
+              className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors"
             >
               View All Goals
             </button>
@@ -320,25 +334,36 @@ const Dashboard = () => {
             </div>
 
             <div className="space-y-4">
-              {(suggestions || mockSuggestions).map((suggestion, index) => (
-                <div key={index} className="p-3 bg-secondary rounded-md">
-                  <div className="flex items-start gap-3">
-                    {suggestion.type === "schedule" && (
-                      <Calendar className="h-5 w-5 text-accent shrink-0" />
-                    )}
-                    {suggestion.type === "goal" && (
-                      <Target className="h-5 w-5 text-accent shrink-0" />
-                    )}
-                    {suggestion.type === "focus" && (
-                      <Activity className="h-5 w-5 text-accent shrink-0" />
-                    )}
-                    <p className="text-sm">{suggestion.message}</p>
+              {suggestions.length > 0 ? (
+                suggestions.map((suggestion, index) => (
+                  <div key={index} className="p-3 bg-secondary rounded-md">
+                    <div className="flex items-start gap-3">
+                      {suggestion.type === "schedule" && (
+                        <Calendar className="h-5 w-5 text-accent shrink-0" />
+                      )}
+                      {suggestion.type === "goal" && (
+                        <Target className="h-5 w-5 text-accent shrink-0" />
+                      )}
+                      {suggestion.type === "focus" && (
+                        <Activity className="h-5 w-5 text-accent shrink-0" />
+                      )}
+                      <p className="text-sm">{suggestion.message}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-3 rounded-md">
+                  <div className="flex justify-center mb-2 items-center text-center">
+                    <h3 className="font-medium">No AI insights</h3>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
 
-            <button className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors">
+            <button
+              onClick={() => navigate("/auths/analytics")}
+              className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors"
+            >
               Generate New Insights
             </button>
           </motion.div>

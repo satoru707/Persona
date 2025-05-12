@@ -13,7 +13,6 @@ const Navbar: React.FC = () => {
 
     window.addEventListener("scroll", handleScroll);
 
-    // Check system preference for dark mode
     if (
       window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -42,7 +41,7 @@ const Navbar: React.FC = () => {
           : "bg-transparent"
       }`}
     >
-      <div className="container flex justify-between items-center py-4">
+      <div className="px-4 mx-auto max-w-7xl flex justify-between items-center py-4">
         <div className="flex justify-center">
           <div className="flex items-center space-x-2">
             <svg
@@ -51,7 +50,7 @@ const Navbar: React.FC = () => {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="text-accent"
+              className="text-violet-600"
             >
               <path
                 d="M12 8V12L14.5 14.5"
@@ -69,13 +68,12 @@ const Navbar: React.FC = () => {
               />
             </svg>
             <h1 className="text-2xl font-bold">
-              <span className="text-accent">Time</span>
+              <span className="text-violet-600">Time</span>
               <span>forge</span>
             </h1>
           </div>
         </div>
 
-        {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-8">
           <a
             href="#features"
@@ -102,12 +100,14 @@ const Navbar: React.FC = () => {
           >
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <a href="/login" className="btn-primary">
+          <a
+            href="/login"
+            className="bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
             Get Started
           </a>
         </div>
 
-        {/* Mobile Menu Button */}
         <div className="flex items-center md:hidden">
           <button
             onClick={toggleDarkMode}
@@ -126,10 +126,9 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-800 shadow-lg">
-          <div className="container py-4 flex flex-col space-y-4">
+          <div className="px-4 mx-auto max-w-7xl py-4 flex flex-col space-y-4">
             <a
               href="#features"
               className="font-medium py-2 hover:text-violet-600 transition-colors"
@@ -153,7 +152,7 @@ const Navbar: React.FC = () => {
             </a>
             <a
               href="/login"
-              className="btn-primary text-center"
+              className="bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-center"
               onClick={() => setMobileMenuOpen(false)}
             >
               Get Started

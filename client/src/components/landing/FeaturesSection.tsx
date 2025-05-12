@@ -51,7 +51,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 
   return (
     <div
-      className="feature-card opacity-0"
+      className="feature-card opacity-5"
       ref={cardRef}
       style={{ animationDelay: `${delay}s`, animationFillMode: "forwards" }}
     >
@@ -142,7 +142,7 @@ const FeaturesSection: React.FC = () => {
   return (
     <section
       id="features"
-      className="py-20 bg-gray-50 dark:bg-gray-800/50"
+      className="py-20 bg-white dark:bg-gray-800/50"
       ref={sectionRef}
     >
       <div className="container">

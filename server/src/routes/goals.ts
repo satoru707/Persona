@@ -34,6 +34,7 @@ router.get("/active", authenticate, async (req, res) => {
       },
       orderBy: { createdAt: "desc" },
     });
+    console.log(goals);
 
     // Filter to goals with at least one incomplete step
     const activeGoals = goals.filter((goal) =>
