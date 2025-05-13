@@ -72,6 +72,7 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
         initial="closed"
         animate={open ? "open" : "closed"}
         variants={sidebarVariants}
+        onClick={() => setOpen(false)}
         transition={{ type: "spring", damping: 20, stiffness: 150 }}
         style={{ position: "fixed" }}
       >

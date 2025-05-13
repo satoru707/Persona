@@ -25,6 +25,11 @@ const Dashboard = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [goals, setGoals] = useState([]);
   const [suggestions, setInsights] = useState([]);
+  function getWeekdayAbbreviation(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { weekday: "short" }); // e.g., "Tue"
+  }
+
   useEffect(() => {
     async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
@@ -37,7 +42,7 @@ const Dashboard = () => {
   // Fetch active goals
   useEffect(() => {
     async function getEvents() {
-      const { data } = await axios.get(`${API_URL}/api/goals/active`);
+      const { data } = await axios.get(`${API_URL}/api/goals`);
       setGoals(data);
     }
     getEvents();
@@ -230,6 +235,11 @@ const Dashboard = () => {
                         </p>
                       )}
                     </div>
+                    <div className="ml-auto text-sm text-foreground/60">
+                      {new Date(event.startTime).toLocaleDateString("en-US", {
+                        weekday: "short",
+                      })}
+                    </div>
                   </div>
                 ))
               ) : (
@@ -361,7 +371,7 @@ const Dashboard = () => {
             </div>
 
             <button
-              onClick={() => navigate("/auths/analytics")}
+              // onClick={() => navigate("/auths/analytics")}
               className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors"
             >
               Generate New Insights

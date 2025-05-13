@@ -5,6 +5,7 @@ import {
   Sun,
   GoalIcon,
   CalendarClock,
+  Brain,
 } from "lucide-react";
 import { useThemeStore } from "../store/themeStore";
 import { useAuthStore } from "../store/authStore";
@@ -87,23 +88,24 @@ const Header = ({ openSidebar }: HeaderProps) => {
           </button>
         </h1>
       </div>
-
       {/* check internet connection */}
 
       <div className="flex items-center gap-4">
-        <button
-          className="hidden md:inline-flex"
-          onClick={() => navigate("/auths/goals")}
-        >
-          <GoalIcon className="h-5 w-5" />
-        </button>
-
         <button
           className="hidden md:inline-flex"
           onClick={() => navigate("/auths/timetable")}
         >
           <CalendarClock className="h-5 w-5" />
         </button>
+        <button
+          className="hidden md:inline-flex"
+          onClick={() => navigate("/auths/goals")}
+        >
+          <GoalIcon className="h-5 w-5" />
+        </button>
+        <button onClick={() => navigate("/auths/analytics")}>
+          <Brain className="hidden md:inline-flex" />
+        </button>{" "}
         <button
           className="p-2 rounded-md hover:bg-secondary"
           onClick={toggleTheme}
@@ -114,7 +116,6 @@ const Header = ({ openSidebar }: HeaderProps) => {
             <Moon className="h-5 w-5" />
           )}
         </button>
-
         <div className="relative" ref={notificationsRef}>
           <button
             className="p-2 rounded-md hover:bg-secondary relative"
@@ -163,7 +164,6 @@ const Header = ({ openSidebar }: HeaderProps) => {
             )}
           </AnimatePresence>
         </div>
-
         <div className="relative" ref={profileRef}>
           <button
             className="flex items-center gap-2"

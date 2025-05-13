@@ -5,7 +5,9 @@ import { prisma } from "../index";
 
 const router = express.Router();
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const URL = process.env.BACKEND_URL || "http://localhost:3000";
+const URL =
+  //  process.env.BACKEND_URL ||
+  "http://localhost:3000";
 const FRONTEND_URL = process.env.CLIENT_URL || "http://localhost:5173";
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = `${URL}/auth/google/callback`;

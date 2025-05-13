@@ -33,6 +33,7 @@ router.get("/active", authenticate, async (req, res) => {
         steps: true,
       },
       orderBy: { createdAt: "desc" },
+      take: 1,
     });
     console.log(goals);
 
@@ -241,6 +242,7 @@ router.put("/steps/:id", authenticate, async (req, res) => {
         goal: true,
       },
     });
+    console.log(step, "step");
 
     if (!step || step.goal.userId !== req.user!.id) {
       return res.status(404).json({ message: "Step not found" });
