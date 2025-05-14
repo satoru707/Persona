@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { format, differenceInDays, set } from "date-fns";
 import {
   Clock,
@@ -8,11 +8,15 @@ import {
   X,
   MoreHorizontal,
   ChevronRight,
+  RotateCcw,
+  Pencil,
+  Trash,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { Goal } from "../types";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 import { API_URL } from "../config";
+import { option } from "framer-motion/client";
 
 // const mockGoals: Goal[] = [
 //   {
@@ -201,6 +205,7 @@ const Goals = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showNewGoalModal, setShowNewGoalModal] = useState(false);
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);
+  const [optionsMoalOpen, setOptionsModalOpen] = useState<string | null>(null);
   const [newGoal, setNewGoal] = useState({
     title: "",
     description: "",
@@ -216,6 +221,32 @@ const Goals = () => {
       dueDate: "",
     },
   ]);
+  //im given the goal id
+  async function handleReset(id: any) {
+    const work = goals.filter((goal) => goal.id === id);
+    async function req(id) {
+      await axios.put(`${URL}/api/goals/steps/${id}`, {
+        isCompleted: false,
+        skippedIsImportant: false,
+        skippedReason: null,
+      });
+    }
+    work.steps.map((step) => {
+      req(step.id);
+    });
+  }
+
+  async function handleEdit(id: any) {
+    // await axios.put(`${URL}/api/goals/${id}`);
+    const { data } = await axios.get(`${URL}/api/goals/${id}`);
+    setNewGoal(data);
+    setSteps(data.steps);
+    setOptionsModalOpen(true);
+  }
+
+  async function handleDelete(id: any) {
+    await axios.delete(`${URL}/api/goals/${id}`);
+  }
 
   const addStep = () => {
     setSteps((prev) => [
@@ -228,6 +259,23 @@ const Goals = () => {
   const removeStep = (indexToRemove: any) => {
     setSteps((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOptionsModalOpen(false);
+      }
+    };
+
+    if (optionsMoalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [optionsMoalOpen]);
 
   // Update individual step
   const updateStep = (index: any, field: any, value: any) => {
@@ -249,13 +297,26 @@ const Goals = () => {
   }, [
     //add some stuffs
     completeStep,
+    handleDelete,
+    handleReset,
+    handleEdit,
   ]);
   // Toggle expanded goal
   const toggleExpandGoal = (goalId: string) => {
-    if (expandedGoal === goalId) {
+    if (optionsMoalOpen === goalId) {
       setExpandedGoal(null);
     } else {
       setExpandedGoal(goalId);
+    }
+  };
+
+  const toggleExpandOption = (optId: string) => {
+    if (optionsMoalOpen) {
+      setOptionsModalOpen(null);
+      console.log("yes");
+    } else {
+      setOptionsModalOpen(optId);
+      console.log("no");
     }
   };
 
@@ -306,6 +367,7 @@ const Goals = () => {
         {goals.length > 0 ? (
           goals.map((goal) => {
             const isExpanded = expandedGoal === goal.id;
+            const isOpened = optionsMoalOpen === goal.id;
             const completedSteps = goal.steps.filter(
               (step) => step.isCompleted
             ).length;
@@ -341,9 +403,50 @@ const Goals = () => {
                       <span className="px-3 py-1 rounded-full bg-accent/20 text-accent text-sm font-medium">
                         {progressPercentage}%
                       </span>
-                      <button className="p-2 rounded-full hover:bg-secondary">
-                        <MoreHorizontal className="h-5 w-5" />
-                      </button>
+                      <div className="relative">
+                        <button className="p-2 rounded-full hover:bg-secondary">
+                          <MoreHorizontal
+                            onClick={() => toggleExpandOption(goal.id)}
+                            className="h-5 w-5"
+                          />
+                        </button>
+
+                        <AnimatePresence>
+                          {isOpened && (
+                            <motion.div
+                              ref={dropdownRef}
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -5 }}
+                              className="absolute right-0 mt-2 w-44 bg-card rounded-md shadow-lg z-50 border border-border"
+                            >
+                              <button
+                                onClick={() => handleReset(goal.id)}
+                                className="w-full text-left flex items-center px-4 py-2 text-sm hover:bg-secondary rounded-md"
+                              >
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Reset Goal
+                              </button>
+
+                              <button
+                                onClick={() => handleEdit(goal.id)}
+                                className="w-full text-left flex items-center px-4 py-2 text-sm hover:bg-secondary rounded-md"
+                              >
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit Goal
+                              </button>
+
+                              <button
+                                onClick={() => handleDelete(goal.id)}
+                                className="w-full text-left flex items-center px-4 py-2 text-sm text-destructive hover:bg-secondary rounded-md"
+                              >
+                                <Trash className="h-4 w-4 mr-2" />
+                                Delete Goal
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </div>
 
