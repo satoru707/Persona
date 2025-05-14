@@ -100,7 +100,7 @@ const Timetable = () => {
     //send request to get events to display
     async function getEvents() {
       const eve = await axios.get(`${BACKURL}/api/events`);
-      console.log(eve.data);
+      // console.log(eve.data);
 
       setEvents(eve.data);
     }
