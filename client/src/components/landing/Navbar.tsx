@@ -87,12 +87,12 @@ const Navbar: React.FC = () => {
           >
             Benefits
           </a>
-          <a
+          {/* <a
             href="#testimonials"
             className="font-medium hover:text-violet-600 transition-colors"
           >
             Testimonials
-          </a>
+          </a> */}
           <button
             onClick={toggleDarkMode}
             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -143,13 +143,13 @@ const Navbar: React.FC = () => {
             >
               Benefits
             </a>
-            <a
+            {/* <a
               href="#testimonials"
               className="font-medium py-2 hover:text-violet-600 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Testimonials
-            </a>
+            </a> */}
             <a
               href="/login"
               className="bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-center"
