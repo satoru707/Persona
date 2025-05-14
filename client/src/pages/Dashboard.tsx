@@ -64,6 +64,12 @@ const Dashboard = () => {
     }, 800);
   }, []);
 
+  async function handleSuggestions() {
+    const { data } = axios.get(`${API_URL}/api/ai/suggestions`);
+    setInsights(data);
+    console.log(data);
+    console.log("done");
+  }
   // Mock data
   // const mockEvents: Event[] = [
   //   {
@@ -224,7 +230,7 @@ const Dashboard = () => {
                     <div className="min-w-[40px] flex flex-col items-center">
                       <Clock className="h-5 w-5 text-accent mb-1" />
                       <span className="text-xs text-foreground/70">
-                        {format(new Date(event.startTime), "HH:mm")}
+                        {format(new Date(event?.startTime), "HH:mm")}
                       </span>
                     </div>
                     <div>
@@ -371,7 +377,7 @@ const Dashboard = () => {
             </div>
 
             <button
-              // onClick={() => navigate("/auths/analytics")}
+              onClick={() => handleSuggestions}
               className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors"
             >
               Generate New Insights

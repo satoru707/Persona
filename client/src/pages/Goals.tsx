@@ -16,7 +16,7 @@ import { Goal } from "../types";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { API_URL } from "../config";
-import { option } from "framer-motion/client";
+// import { option } from "framer-motion/client";
 
 // const mockGoals: Goal[] = [
 //   {
@@ -219,39 +219,61 @@ const Goals = () => {
       title: "",
       description: "",
       dueDate: "",
+      isCompleted: false,
     },
   ]);
   //im given the goal id
-  async function handleReset(id: any) {
-    const work = goals.filter((goal) => goal.id === id);
-    async function req(id) {
+  async function handleReset(id: string) {
+    const work = goals.find((goal) => goal.id === id);
+    async function req(id: string) {
       await axios.put(`${URL}/api/goals/steps/${id}`, {
         isCompleted: false,
         skippedIsImportant: false,
         skippedReason: null,
       });
     }
-    work.steps.map((step) => {
-      req(step.id);
-    });
+    work?.steps.map((step) => req(step.id));
+    setExpandedGoal(null);
+  }
+  function formatDateToYMD(dateString: string) {
+    const date = new Date(dateString);
+
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, "0"); // add leading 0
+    const day = `${date.getDate()}`.padStart(2, "0"); // add leading 0
+
+    return `${year}-${month}-${day}`;
   }
 
-  async function handleEdit(id: any) {
+  function convertYMDToISOString(ymdString: string) {
+    const date = new Date(`${ymdString}T00:00:00Z`);
+    return date.toISOString();
+  }
+
+  async function handleEdit(id: number) {
     // await axios.put(`${URL}/api/goals/${id}`);
     const { data } = await axios.get(`${URL}/api/goals/${id}`);
     setNewGoal(data);
     setSteps(data.steps);
-    setOptionsModalOpen(true);
+    setShowNewGoalModal(true);
+    setExpandedGoal(null);
   }
 
-  async function handleDelete(id: any) {
+  async function handleDelete(id: string | number) {
     await axios.delete(`${URL}/api/goals/${id}`);
+    setExpandedGoal(null);
   }
 
   const addStep = () => {
     setSteps((prev) => [
       ...prev,
-      { id: prev.length + 1, title: "", description: "", dueDate: "" },
+      {
+        id: prev.length + 1,
+        title: "",
+        description: "",
+        dueDate: "",
+        isCompleted: false,
+      },
     ]);
   };
 
@@ -277,6 +299,11 @@ const Goals = () => {
     };
   }, [optionsMoalOpen]);
 
+  function isISOString(str) {
+    const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+    return typeof str === "string" && isoRegex.test(str);
+  }
+
   // Update individual step
   const updateStep = (index: any, field: any, value: any) => {
     const updatedSteps = [...stepa];
@@ -300,9 +327,10 @@ const Goals = () => {
     handleDelete,
     handleReset,
     handleEdit,
+    handleUpdateGoal,
   ]);
   // Toggle expanded goal
-  const toggleExpandGoal = (goalId: string) => {
+  const toggleExpandGoal = (goalId: string | null) => {
     if (optionsMoalOpen === goalId) {
       setExpandedGoal(null);
     } else {
@@ -310,13 +338,11 @@ const Goals = () => {
     }
   };
 
-  const toggleExpandOption = (optId: string) => {
+  const toggleExpandOption = (optId: string | null) => {
     if (optionsMoalOpen) {
       setOptionsModalOpen(null);
-      console.log("yes");
     } else {
       setOptionsModalOpen(optId);
-      console.log("no");
     }
   };
 
@@ -346,8 +372,21 @@ const Goals = () => {
         title: "",
         description: "",
         dueDate: "",
+        isCompleted: false,
       },
     ]);
+  }
+
+  async function handleUpdateGoal(e: any) {
+    e.preventDefault();
+    setShowNewGoalModal(false);
+    console.log(newGoal);
+
+    await axios.put(`${URL}/api/goals/${newGoal.id}`, newGoal);
+    async function req(stap: any) {
+      await axios.put(`${URL}/api/goals/steps/${stap.id}`, stap);
+    }
+    newGoal.steps.map((step) => req(step));
   }
 
   return (
@@ -492,7 +531,9 @@ const Goals = () => {
 
                   <button
                     className="w-full mt-4 flex items-center justify-center p-2 text-sm rounded-md bg-secondary hover:bg-secondary/80"
-                    onClick={() => toggleExpandGoal(goal.id)}
+                    onClick={() =>
+                      toggleExpandGoal(isExpanded ? null : goal.id)
+                    }
                   >
                     <span>{isExpanded ? "Hide Steps" : "Show Steps"}</span>
                     <ChevronRight
@@ -598,7 +639,24 @@ const Goals = () => {
               <h2 className="text-lg font-semibold">New Goal</h2>
               <button
                 className="p-1 rounded-full hover:bg-secondary"
-                onClick={() => setShowNewGoalModal(false)}
+                onClick={() => {
+                  setShowNewGoalModal(false);
+                  setNewGoal({
+                    title: "",
+                    description: "",
+                    totalDays: 0,
+                    steps: [],
+                  });
+                  setSteps([
+                    {
+                      id: 0,
+                      title: "",
+                      description: "",
+                      dueDate: "",
+                      isCompleted: false,
+                    },
+                  ]);
+                }}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -705,9 +763,13 @@ const Goals = () => {
                       <input
                         type="date"
                         className="input w-full text-sm"
-                        value={step.dueDate}
+                        value={formatDateToYMD(step.dueDate) || step.dueDate}
                         onChange={(e) =>
-                          updateStep(index, "dueDate", e.target.value)
+                          updateStep(
+                            index,
+                            "dueDate",
+                            convertYMDToISOString(e.target.value)
+                          )
                         }
                       />
                     </div>
@@ -734,9 +796,15 @@ const Goals = () => {
                 <button
                   type="button"
                   className="btn btn-accent"
-                  onClick={(e) => handleCreateGoal(e)}
+                  onClick={(e) =>
+                    !isISOString(newGoal.steps[0].dueDate)
+                      ? handleCreateGoal(e)
+                      : handleUpdateGoal(e)
+                  }
                 >
-                  Create Goal
+                  {!isISOString(newGoal.steps[0].dueDate)
+                    ? "Create Goal"
+                    : "Edit Goal"}
                 </button>
               </div>
             </form>
