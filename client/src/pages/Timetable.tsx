@@ -20,7 +20,7 @@ tomorrow.setDate(today.getDate() + 1);
 //   return newDate;
 // };
 
-const BACKURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const BACKURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // const mockEvents: Event[] = [
 //   {
