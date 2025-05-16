@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   format,
   startOfWeek,
@@ -9,9 +9,7 @@ import {
 } from "date-fns";
 import {
   BarChart as BarChartIcon,
-  Calendar,
   CheckCircle,
-  XCircle,
   Target,
   ChevronLeft,
   ChevronRight,
@@ -20,8 +18,6 @@ import {
   TrendingUp,
 } from "lucide-react";
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart,
@@ -35,38 +31,122 @@ import {
   CartesianGrid,
 } from "recharts";
 import { motion } from "framer-motion";
+import axios from "axios";
+import { API_URL } from "../config";
 
 // Mock data
-const weeklyCompletionData = [
-  { day: "Mon", completed: 5, skipped: 1 },
-  { day: "Tue", completed: 4, skipped: 2 },
-  { day: "Wed", completed: 6, skipped: 0 },
-  { day: "Thu", completed: 3, skipped: 3 },
-  { day: "Fri", completed: 5, skipped: 1 },
-  { day: "Sat", completed: 2, skipped: 0 },
-  { day: "Sun", completed: 1, skipped: 0 },
-];
-
-const goalProgressData = [
-  { name: "Website Redesign", progress: 30 },
-  { name: "Learn Python", progress: 15 },
-];
-
-const specialEventsData = [
-  { name: "Business Networking", value: 3 },
-  { name: "Learning Session", value: 4 },
-  { name: "Family Time", value: 2 },
-  { name: "Personal Project", value: 1 },
-];
 
 const COLORS = ["#8B5CF6", "#3B82F6", "#14B8A6", "#F97316"];
 
 const Analytics = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [goalProgressData, setGoalProgressData] = useState([]);
+  const [weeklyCompletionData, setWeeklyCompletionData] = useState([]);
+  const [hour] = useState(getTotalHoursToday(weeklyCompletionData));
 
   const startDate = startOfWeek(currentWeek);
   const endDate = endOfWeek(currentWeek);
-  const daysOfWeek = eachDayOfInterval({ start: startDate, end: endDate });
+  // const weeklyCompletionData = [
+  //   { day: "Mon", completed: 5, skipped: 1 },
+  //   { day: "Tue", completed: 4, skipped: 2 },
+  //   { day: "Wed", completed: 6, skipped: 0 },
+  //   { day: "Thu", completed: 3, skipped: 3 },
+  //   { day: "Fri", completed: 5, skipped: 1 },
+  //   { day: "Sat", completed: 2, skipped: 0 },
+  //   { day: "Sun", completed: 1, skipped: 0 },
+  // ];
+
+  function getWeeklyCompletionData(stepsArray: any) {
+    const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    // Initialize weekly result
+    const weeklyData = {
+      Sun: { day: "Sun", completed: 0, skipped: 0 },
+      Mon: { day: "Mon", completed: 0, skipped: 0 },
+      Tue: { day: "Tue", completed: 0, skipped: 0 },
+      Wed: { day: "Wed", completed: 0, skipped: 0 },
+      Thu: { day: "Thu", completed: 0, skipped: 0 },
+      Fri: { day: "Fri", completed: 0, skipped: 0 },
+      Sat: { day: "Sat", completed: 0, skipped: 0 },
+    };
+
+    for (const step of stepsArray) {
+      const date = new Date(step.startTime);
+      const dayKey = dayMap[date.getUTCDay()]; // getUTCDay() gives 0-6 (Sun-Sat)
+
+      if (step.isCompleted) {
+        weeklyData[dayKey].completed++;
+      }
+
+      if (step.skippedIsImportant) {
+        weeklyData[dayKey].skipped++;
+      }
+    }
+
+    return Object.values(weeklyData);
+  }
+
+  // const goalProgressData = [
+  //   { name: "Website Redesign", progress: 30 },
+  //   { name: "Learn Python", progress: 15 },
+  // ];
+
+  function getTotalHoursToday(tasks): number {
+    const today = new Date().toISOString().slice(0, 10); // e.g., '2025-05-12'
+
+    const totalHours = tasks.reduce((sum, task) => {
+      if (!task.startTime || !task.endTime) return sum;
+
+      const start = new Date(task.startTime);
+      const end = new Date(task.endTime);
+      const taskDate = task.startTime.slice(0, 10); // compare only date portion
+
+      if (taskDate === today) {
+        const diffInMs = end - start;
+        const diffInHours = diffInMs / (1000 * 60 * 60);
+        return sum + diffInHours;
+      }
+
+      return sum;
+    }, 0);
+
+    return totalHours;
+  }
+
+  const specialEventsData = [
+    { name: "Business Networking", value: 3 },
+    { name: "Learning Session", value: 4 },
+    { name: "Family Time", value: 2 },
+    { name: "Personal Project", value: 1 },
+  ];
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data } = await axios.get(`${API_URL}/api/events`);
+      console.log(data);
+      const week = getWeeklyCompletionData(data);
+      setWeeklyCompletionData(week);
+    }
+    fetchData();
+  }, [currentWeek]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data } = await axios.get(`${API_URL}/api/goals`);
+      const arr: any = [];
+      data.map((goal) => {
+        const completedSteps = goal.steps.filter(
+          (step) => step.isCompleted
+        ).length;
+        arr.push({
+          name: goal.title,
+          progress: ((completedSteps / goal.steps.length) * 100).toFixed(0),
+        });
+      });
+      setGoalProgressData(arr);
+    }
+    fetchData();
+  }, []);
 
   const nextWeek = () => {
     setCurrentWeek(addWeeks(currentWeek, 1));
@@ -74,6 +154,7 @@ const Analytics = () => {
 
   const prevWeek = () => {
     setCurrentWeek(subWeeks(currentWeek, 1));
+    console.log(currentWeek);
   };
 
   // Calculate summary metrics
@@ -109,6 +190,11 @@ const Analytics = () => {
     }
     return null;
   };
+  var perc = 0;
+  const percentag = goalProgressData.map(
+    (goal) => (perc += parseInt(goal.progress))
+  );
+  const percentage = percentag.reduce((total, num) => total + num, 0);
 
   return (
     <div>
@@ -182,7 +268,10 @@ const Analytics = () => {
             <h3 className="text-sm font-medium">Goal Progress</h3>
             <Target className="h-5 w-5 text-accent" />
           </div>
-          <p className="text-2xl font-bold">22%</p>
+          <p className="text-2xl font-bold">
+            {percentage ? (percentage / goalProgressData.length).toFixed(1) : 0}
+            %
+          </p>
           <p className="text-xs text-foreground/70">Average across all goals</p>
         </motion.div>
 
@@ -196,7 +285,7 @@ const Analytics = () => {
             <h3 className="text-sm font-medium">Focus Time</h3>
             <Clock className="h-5 w-5 text-accent" />
           </div>
-          <p className="text-2xl font-bold">23.5h</p>
+          <p className="text-2xl font-bold">{hour}h</p>
           <p className="text-xs text-foreground/70">Total productive hours</p>
         </motion.div>
       </div>
@@ -307,22 +396,26 @@ const Analytics = () => {
         </div>
 
         <div className="space-y-4">
-          {goalProgressData.map((goal) => (
-            <div key={goal.name} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">{goal.name}</span>
-                <span className="text-sm bg-accent/20 text-accent px-2 py-0.5 rounded-full">
-                  {goal.progress}%
-                </span>
+          {goalProgressData.length > 0 ? (
+            goalProgressData.map((goal) => (
+              <div key={goal.name} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{goal.name}</span>
+                  <span className="text-sm bg-accent/20 text-accent px-2 py-0.5 rounded-full">
+                    {goal.progress}%
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-accent rounded-full transition-all duration-500"
+                    style={{ width: `${goal.progress}%` }}
+                  ></div>
+                </div>
               </div>
-              <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-accent rounded-full transition-all duration-500"
-                  style={{ width: `${goal.progress}%` }}
-                ></div>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">No goals set yet.</p>
+          )}
         </div>
       </motion.div>
 
