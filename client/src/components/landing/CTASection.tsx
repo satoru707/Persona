@@ -42,7 +42,7 @@ const CTASection: React.FC = () => {
               style={{ animationDelay: "0.2s", animationFillMode: "forwards" }}
             >
               Join thousands of users who have already optimized their time and
-              achieved their goals with Chronos.
+              achieved their goals with TimeForge.
             </p>
 
             <div

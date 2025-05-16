@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
               href="#"
               className="font-bold text-2xl text-violet-600 mb-4 inline-block"
             >
-              Chronos
+              TimeForge
             </a>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               AI-powered time management and goal tracking for ambitious

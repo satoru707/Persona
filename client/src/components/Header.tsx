@@ -3,9 +3,9 @@ import {
   Menu,
   Moon,
   Sun,
-  GoalIcon,
-  CalendarClock,
-  Brain,
+  Calendar,
+  Target,
+  BarChart,
 } from "lucide-react";
 import { useThemeStore } from "../store/themeStore";
 import { useAuthStore } from "../store/authStore";
@@ -95,16 +95,16 @@ const Header = ({ openSidebar }: HeaderProps) => {
           className="hidden md:inline-flex"
           onClick={() => navigate("/auths/timetable")}
         >
-          <CalendarClock className="h-5 w-5" />
+          <Calendar className="h-5 w-5" />
         </button>
         <button
           className="hidden md:inline-flex"
           onClick={() => navigate("/auths/goals")}
         >
-          <GoalIcon className="h-5 w-5" />
+          <Target className="h-5 w-5" />
         </button>
         <button onClick={() => navigate("/auths/analytics")}>
-          <Brain className="hidden md:inline-flex" />
+          <BarChart className="hidden md:inline-flex" />
         </button>{" "}
         <button
           className="p-2 rounded-md hover:bg-secondary"

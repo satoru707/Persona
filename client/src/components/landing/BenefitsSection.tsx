@@ -208,7 +208,7 @@ const BenefitsSection: React.FC = () => {
               className="text-lg text-gray-600 dark:text-gray-300 mb-10 opacity-0"
               style={{ animationDelay: "0.2s", animationFillMode: "forwards" }}
             >
-              Chronos helps you take control of your schedule and achieve your
+              TimeForge helps you take control of your schedule and achieve your
               goals with less stress and more focus.
             </p>
 

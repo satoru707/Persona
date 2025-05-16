@@ -48,8 +48,8 @@ const HeroSection: React.FC = () => {
               <span className="text-violet-600">Achieve Your Goals.</span>
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
-              Chronos combines AI-powered scheduling with goal tracking to help
-              you optimize your time and achieve what matters most.
+              TimeForge combines AI-powered scheduling with goal tracking to
+              help you optimize your time and achieve what matters most.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="/login" className="btn-primary text-center">

@@ -156,8 +156,8 @@ const FeaturesSection: React.FC = () => {
           className="section-subtitle opacity-0"
           style={{ animationDelay: "0.2s", animationFillMode: "forwards" }}
         >
-          Chronos combines intelligent scheduling with goal tracking to help you
-          make the most of your time.
+          TimeForge combines intelligent scheduling with goal tracking to help
+          you make the most of your time.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

@@ -64,6 +64,19 @@ const Dashboard = () => {
     }, 800);
   }, []);
 
+  function shuffleArray(array: [any]) {
+    let currentIndex = array.length;
+    while (currentIndex != 0) {
+      const randomIndex = Math.floor(Math.random() + currentIndex);
+      currentIndex--;
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex],
+        array[currentIndex],
+      ];
+    }
+    return array;
+  }
+
   async function handleSuggestions() {
     const { data } = axios.get(`${API_URL}/api/ai/suggestions`);
     setInsights(data);
@@ -287,38 +300,43 @@ const Dashboard = () => {
 
             <div className="space-y-4">
               {goals.length > 0 ? (
-                goals.slice(0, 2).map((goal) => {
-                  const completedSteps = goal.steps.filter(
-                    (step) => step.isCompleted
-                  ).length;
-                  const progressPercentage = Math.round(
-                    (completedSteps / goal.steps.length) * 100
-                  );
+                shuffleArray(goals)
+                  .slice(0, 4)
+                  .map((goal) => {
+                    const completedSteps = goal.steps.filter(
+                      (step) => step.isCompleted
+                    ).length;
+                    const progressPercentage = Math.round(
+                      (completedSteps / goal.steps.length) * 100
+                    );
 
-                  return (
-                    <div key={goal.id} className="p-3 bg-secondary rounded-md">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium">{goal.title}</h3>
-                        <span className="text-xs px-2 py-1 bg-accent/20 text-accent rounded-full">
-                          {progressPercentage}%
-                        </span>
-                      </div>
+                    return (
+                      <div
+                        key={goal.id}
+                        className="p-3 bg-secondary rounded-md"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-medium">{goal.title}</h3>
+                          <span className="text-xs px-2 py-1 bg-accent/20 text-accent rounded-full">
+                            {progressPercentage}%
+                          </span>
+                        </div>
 
-                      <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-accent rounded-full transition-all duration-500"
-                          style={{ width: `${progressPercentage}%` }}
-                        ></div>
-                      </div>
+                        <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-accent rounded-full transition-all duration-500"
+                            style={{ width: `${progressPercentage}%` }}
+                          ></div>
+                        </div>
 
-                      <div className="mt-3 text-sm text-foreground/70">
-                        Next step:{" "}
-                        {goal.steps.find((step) => !step.isCompleted)?.title ||
-                          "All steps completed!"}
+                        <div className="mt-3 text-sm text-foreground/70">
+                          Next step:{" "}
+                          {goal.steps.find((step) => !step.isCompleted)
+                            ?.title || "All steps completed!"}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })
               ) : (
                 <div className="p-3  rounded-md">
                   <div className="flex justify-center mb-2 items-center text-center">

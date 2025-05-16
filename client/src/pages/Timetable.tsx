@@ -9,9 +9,9 @@ import axios from "axios";
 // import { sk } from "date-fns/locale";
 
 // Create base dates for events
-const today = new Date();
-const tomorrow = new Date();
-tomorrow.setDate(today.getDate() + 1);
+// const today = new Date();
+// const tomorrow = new Date();
+// tomorrow.setDate(today.getDate() + 1);
 
 // Helper function to create event times
 // const createEventTime = (date: Date, hours: number, minutes: number) => {
@@ -164,6 +164,7 @@ const Timetable = () => {
       skippedReason: skipps,
     });
     setShowEventDetailsModal(false);
+    setSkipps("");
   }
 
   async function handleResetStatus() {
@@ -421,7 +422,10 @@ const Timetable = () => {
               <h2 className="text-lg font-semibold">Event Details</h2>
               <button
                 className="p-1 rounded-full hover:bg-secondary"
-                onClick={() => setShowEventDetailsModal(false)}
+                onClick={() => {
+                  setShowEventDetailsModal(false);
+                  setSkipps("");
+                }}
               >
                 <X className="h-5 w-5" />
               </button>
