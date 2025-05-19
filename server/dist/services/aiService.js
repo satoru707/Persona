@@ -5,7 +5,7 @@ const generative_ai_1 = require("@google/generative-ai");
 // Initialize Gemini API
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const genAI = new generative_ai_1.GoogleGenerativeAI(GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 // Generate event suggestions
 const generateEventSuggestions = async (events) => {
     if (!process.env.GEMINI_API_KEY || events.length === 0) {

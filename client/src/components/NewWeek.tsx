@@ -6,7 +6,7 @@ import { useState } from "react";
 export default function NewWeek() {
   const [events, setEvents] = useState([]);
   function handleNo() {
-    console.log("Bummer");
+    // console.log("Bummer");
   }
 
   async function handleYes() {

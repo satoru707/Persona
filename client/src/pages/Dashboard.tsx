@@ -25,18 +25,79 @@ const Dashboard = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [goals, setGoals] = useState([]);
   const [suggestions, setInsights] = useState([]);
-  function getWeekdayAbbreviation(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { weekday: "short" }); // e.g., "Tue"
+  const [goalProgressData, setGoalProgressData] = useState([]);
+  const [weeklyCompletionData, setWeeklyCompletionData] = useState([]);
+  const [specialEventsData, setSpecialEventsData] = useState([]);
+  // function getWeekdayAbbreviation(dateString) {
+  //   const date = new Date(dateString);
+  //   return date.toLocaleDateString("en-US", { weekday: "short" }); // e.g., "Tue"
+  // }
+
+  function getImportantSkippedEvents(events) {
+    const filtered = events.filter((event) => event.skippedIsImportant);
+
+    const titleCountMap = {};
+
+    filtered.forEach((event) => {
+      const title = event.title;
+      titleCountMap[title] = (titleCountMap[title] || 0) + 1;
+    });
+
+    const result = Object.entries(titleCountMap).map(([title, count]) => ({
+      name: title,
+      value: count,
+    }));
+
+    return result;
+  }
+
+  function getWeeklyCompletionData(stepsArray: any) {
+    const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    // Initialize weekly result
+    const weeklyData = {
+      Sun: { day: "Sun", completed: 0, skipped: 0 },
+      Mon: { day: "Mon", completed: 0, skipped: 0 },
+      Tue: { day: "Tue", completed: 0, skipped: 0 },
+      Wed: { day: "Wed", completed: 0, skipped: 0 },
+      Thu: { day: "Thu", completed: 0, skipped: 0 },
+      Fri: { day: "Fri", completed: 0, skipped: 0 },
+      Sat: { day: "Sat", completed: 0, skipped: 0 },
+    };
+
+    for (const step of stepsArray) {
+      const date = new Date(step.startTime);
+      const dayKey = dayMap[date.getUTCDay()]; // getUTCDay() gives 0-6 (Sun-Sat)
+
+      if (step.isCompleted) {
+        weeklyData[dayKey].completed++;
+      }
+
+      if (step.skippedIsImportant) {
+        weeklyData[dayKey].skipped++;
+      }
+    }
+
+    return Object.values(weeklyData);
   }
 
   useEffect(() => {
     async function getEvents() {
-      const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
+      const { data } = await axios.get(`${API_URL}/api/events`);
       setEvents(data);
+      const week = getWeeklyCompletionData(data);
+      setWeeklyCompletionData(week);
+      const specia = getImportantSkippedEvents(data);
+      setSpecialEventsData(specia);
     }
     getEvents();
   }, []);
+  // const specialEventsData = [
+  //   { name: "Business Networking", value: 3 },
+  //   { name: "Learning Session", value: 4 },
+  //   { name: "Family Time", value: 2 },
+  //   { name: "Personal Project", value: 1 },
+  // ];
   // console.log(events);
 
   // Fetch active goals
@@ -44,6 +105,17 @@ const Dashboard = () => {
     async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/goals`);
       setGoals(data);
+      const arr: any = [];
+      data.map((goal) => {
+        const completedSteps = goal.steps.filter(
+          (step) => step.isCompleted
+        ).length;
+        arr.push({
+          name: goal.title,
+          progress: ((completedSteps / goal.steps.length) * 100).toFixed(0),
+        });
+      });
+      setGoalProgressData(arr);
     }
     getEvents();
   }, []);
@@ -54,6 +126,7 @@ const Dashboard = () => {
       const { data } = await axios.get(`${API_URL}/api/ai/suggestions`);
       setInsights(data);
     }
+
     getEvents();
   }, []);
   const navigate = useNavigate();
@@ -77,12 +150,35 @@ const Dashboard = () => {
     return array;
   }
 
+  var perc = 0;
+  const percentag = goalProgressData.map(
+    (goal) => (perc += parseInt(goal.progress))
+  );
+  const percentage = percentag.reduce((total, num) => total + num, 0);
+
   async function handleSuggestions() {
-    const { data } = axios.get(`${API_URL}/api/ai/suggestions`);
+    const { data } = await axios.get(`${API_URL}/api/ai/suggestions`);
     setInsights(data);
-    console.log(data);
-    console.log("done");
+    // console.log(data);
+    // console.log("done");
   }
+
+  const totalSpecialEvents = specialEventsData.reduce(
+    (sum, item) => sum + item.value,
+    0
+  );
+
+  const totalCompleted = weeklyCompletionData.reduce(
+    (sum, day) => sum + day.completed,
+    0
+  );
+  const totalSkipped = weeklyCompletionData.reduce(
+    (sum, day) => sum + day.skipped,
+    0
+  );
+  const completionRate = Math.round(
+    (totalCompleted / (totalCompleted + totalSkipped)) * 100
+  );
   // Mock data
   // const mockEvents: Event[] = [
   //   {
@@ -235,7 +331,7 @@ const Dashboard = () => {
 
             <div className="space-y-4">
               {events.length > 0 ? (
-                events.slice(0, 5).map((event) => (
+                events.slice(0, 4).map((event) => (
                   <div
                     key={event.id}
                     className="flex items-start gap-3 p-3 bg-secondary rounded-md"
@@ -369,7 +465,7 @@ const Dashboard = () => {
 
             <div className="space-y-4">
               {suggestions.length > 0 ? (
-                suggestions.map((suggestion, index) => (
+                suggestions.splice(0, 3).map((suggestion, index) => (
                   <div key={index} className="p-3 bg-secondary rounded-md">
                     <div className="flex items-start gap-3">
                       {suggestion.type === "schedule" && (
@@ -422,9 +518,12 @@ const Dashboard = () => {
                   <h3 className="text-sm font-medium">Events Completed</h3>
                   <CheckCircle className="h-5 w-5 text-success" />
                 </div>
-                <p className="text-2xl font-bold mt-2">18/23</p>
+                <p className="text-2xl font-bold mt-2">
+                  {" "}
+                  {totalCompleted}/{events.length}
+                </p>
                 <p className="text-xs text-foreground/70 mt-1">
-                  78% completion rate
+                  {completionRate}% completion rate
                 </p>
               </div>
 
@@ -433,9 +532,9 @@ const Dashboard = () => {
                   <h3 className="text-sm font-medium">Special Events</h3>
                   <AlertCircle className="h-5 w-5 text-warning" />
                 </div>
-                <p className="text-2xl font-bold mt-2">5</p>
+                <p className="text-2xl font-bold mt-2">{totalSpecialEvents}</p>
                 <p className="text-xs text-foreground/70 mt-1">
-                  2 more than last week
+                  0 more than last week
                 </p>
               </div>
 
@@ -444,7 +543,12 @@ const Dashboard = () => {
                   <h3 className="text-sm font-medium">Goal Progress</h3>
                   <Target className="h-5 w-5 text-accent" />
                 </div>
-                <p className="text-2xl font-bold mt-2">65%</p>
+                <p className="text-2xl font-bold mt-2">
+                  {" "}
+                  {percentage
+                    ? (percentage / goalProgressData.length).toFixed(1)
+                    : 0}
+                </p>
                 <p className="text-xs text-foreground/70 mt-1">
                   On track for completion
                 </p>

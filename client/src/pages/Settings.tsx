@@ -6,11 +6,10 @@ import { useAuthStore } from "../store/authStore";
 
 const Settings = () => {
   const { theme, setTheme } = useThemeStore();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationTime, setNotificationTime] = useState("10");
   const [saveLoading, setSaveLoading] = useState(false);
-
   const handleSaveSettings = () => {
     setSaveLoading(true);
 
@@ -143,7 +142,7 @@ const Settings = () => {
                 <input
                   type="email"
                   className="input w-full"
-                  value="demo@example.com"
+                  value={user?.email}
                   disabled
                 />
                 <p className="text-xs text-foreground/70 mt-1">
@@ -158,7 +157,7 @@ const Settings = () => {
                 <input
                   type="text"
                   className="input w-full"
-                  defaultValue="Demo User"
+                  defaultValue={user?.name}
                 />
               </div>
             </div>

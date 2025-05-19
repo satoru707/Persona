@@ -5,6 +5,7 @@ import {
   generateDailyFocus,
   generateEventSuggestions,
   generateGoalSuggestions,
+  generateGoalSteps,
 } from "../services/aiService";
 
 const router = express.Router();
@@ -29,6 +30,7 @@ router.get("/suggestions", authenticate, async (req, res) => {
         },
       },
       orderBy: { startTime: "asc" },
+      take: 5,
     });
 
     // Get user's active goals
@@ -39,6 +41,7 @@ router.get("/suggestions", authenticate, async (req, res) => {
       include: {
         steps: true,
       },
+      take: 5,
     });
 
     // Generate suggestions

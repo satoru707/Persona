@@ -2,7 +2,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
-import { Calendar, Clock, Plus, X, CheckCircle, XCircle } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Plus,
+  X,
+  CheckCircle,
+  XCircle,
+  Circle,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { Event } from "../types";
 import axios from "axios";
@@ -94,6 +102,7 @@ const Timetable = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [skipps, setSkipps] = useState("");
   const [show, setShow] = useState(false);
+  const [important, setImportant] = useState(false);
   // console.log(newEvent, "new event");
 
   useEffect(() => {
@@ -130,13 +139,14 @@ const Timetable = () => {
 
   async function handleNewEvent(e: any) {
     e.preventDefault();
-    console.log("SEND API REQUEST.");
+    // console.log("SEND API REQUEST.");
     if (!newEvent.title || !newEvent.startTime || !newEvent.endTime) {
       alert("Please fill out all fields");
       return;
     }
     setShowNewEventModal(false);
     await axios.post(`${BACKURL}/api/events`, newEvent);
+
     setNewEvent({
       title: "",
       description: "",
@@ -160,7 +170,7 @@ const Timetable = () => {
     setShow(false);
     if (!selectedEvent) return;
     await axios.put(`${BACKURL}/api/events/${selectedEvent.id}/skip`, {
-      skippedIsImportant: true,
+      skippedIsImportant: important,
       skippedReason: skipps,
     });
     setShowEventDetailsModal(false);
@@ -425,6 +435,7 @@ const Timetable = () => {
                 onClick={() => {
                   setShowEventDetailsModal(false);
                   setSkipps("");
+                  setShow(false);
                 }}
               >
                 <X className="h-5 w-5" />
@@ -483,6 +494,24 @@ const Timetable = () => {
                     value={skipps}
                     onChange={(e) => setSkipps(e.target.value)}
                   ></textarea>
+                  <div>
+                    <button
+                      onClick={() => setImportant(!important)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-md border transition duration-200 
+    ${
+      important
+        ? "bg-yellow-400 text-white border-yellow-400 hover:bg-yellow-500"
+        : "border-yellow-400 text-yellow-600 hover:bg-yellow-100"
+    }`}
+                    >
+                      {important ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : (
+                        <Circle className="w-4 h-4" />
+                      )}
+                      {important ? "Marked Important" : "Mark as Important"}
+                    </button>
+                  </div>
                   <button
                     onClick={handleSkipEvent}
                     className="flex-1 btn bg-warning/20 text-warning hover:bg-warning/30"
@@ -522,7 +551,10 @@ const Timetable = () => {
                 </button>
                 <button
                   className="btn bg-secondary hover:bg-secondary/90"
-                  onClick={() => setShowEventDetailsModal(false)}
+                  onClick={() => {
+                    setShowEventDetailsModal(false);
+                    setShow(false);
+                  }}
                 >
                   Close
                 </button>

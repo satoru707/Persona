@@ -53,40 +53,39 @@ router.get("/", auth_1.authenticate, async (req, res) => {
     }
 });
 // Get upcoming events
-router.get("/upcoming", auth_1.authenticate, async (req, res) => {
-    try {
-        const now = new Date();
-        // const endOfDay = new Date(
-        //   Date.UTC(
-        //     now.getUTCFullYear(),
-        //     now.getUTCMonth(),
-        //     now.getUTCDate(),
-        //     23,
-        //     59,
-        //     59,
-        //     999
-        //   )
-        // );
-        const next24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        const events = await index_1.prisma.event.findMany({
-            where: {
-                userId: req.user.id,
-                startTime: {
-                    gte: now,
-                    lte: next24Hours,
-                },
-            },
-            orderBy: { startTime: "asc" },
-            take: 5, // Limit to 5 upcoming events
-        });
-        console.log(events);
-        res.json(events);
-    }
-    catch (error) {
-        console.error("Get Upcoming Events Error:", error);
-        res.status(500).json({ message: "Failed to get upcoming events" });
-    }
-});
+// router.get("/upcoming", authenticate, async (req, res) => {
+//   try {
+//     const now = new Date();
+//     // const endOfDay = new Date(
+//     //   Date.UTC(
+//     //     now.getUTCFullYear(),
+//     //     now.getUTCMonth(),
+//     //     now.getUTCDate(),
+//     //     23,
+//     //     59,
+//     //     59,
+//     //     999
+//     //   )
+//     // );
+//     const next24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000);
+//     const events = await prisma.event.findMany({
+//       where: {
+//         userId: req.user!.id,
+//         startTime: {
+//           gte: now,
+//           lte: next24Hours,
+//         },
+//       },
+//       orderBy: { startTime: "asc" },
+//       take: 5, // Limit to 5 upcoming events
+//     });
+//     console.log(events);
+//     res.json(events);
+//   } catch (error) {
+//     console.error("Get Upcoming Events Error:", error);
+//     res.status(500).json({ message: "Failed to get upcoming events" });
+//   }
+// });
 // Get events for a specific date/week
 router.get("/date", auth_1.authenticate, async (req, res) => {
     try {

@@ -56,6 +56,7 @@ router.get("/suggestions", auth_1.authenticate, async (req, res) => {
                 },
             },
             orderBy: { startTime: "asc" },
+            take: 5,
         });
         // Get user's active goals
         const goals = await index_1.prisma.goal.findMany({
@@ -65,6 +66,7 @@ router.get("/suggestions", auth_1.authenticate, async (req, res) => {
             include: {
                 steps: true,
             },
+            take: 5,
         });
         // Generate suggestions
         const scheduleSuggestions = await (0, aiService_1.generateEventSuggestions)(events);
@@ -99,7 +101,7 @@ router.post("/optimize-schedule", auth_1.authenticate, async (req, res) => {
 router.post("/generate-steps", auth_1.authenticate, async (req, res) => {
     try {
         const { goal, totalDays } = req.body;
-        const steps = await generateGoalSteps(goal, totalDays);
+        const steps = await (0, aiService_1.generateGoalSteps)(goal, totalDays);
         res.json({ steps });
     }
     catch (error) {

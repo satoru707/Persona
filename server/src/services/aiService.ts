@@ -4,7 +4,7 @@ import { Event, Goal, Step } from "@prisma/client";
 // Initialize Gemini API
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Generate event suggestions
 export const generateEventSuggestions = async (events: Event[]) => {

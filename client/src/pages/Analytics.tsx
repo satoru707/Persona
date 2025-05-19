@@ -42,7 +42,9 @@ const Analytics = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [goalProgressData, setGoalProgressData] = useState([]);
   const [weeklyCompletionData, setWeeklyCompletionData] = useState([]);
-  const [hour] = useState(getTotalHoursToday(weeklyCompletionData));
+  const [hour, setHour] = useState();
+  const [specialEventsData, setSpecialEventsData] = useState([]);
+  const [suggestion, setSuggestion] = useState([]);
 
   const startDate = startOfWeek(currentWeek);
   const endDate = endOfWeek(currentWeek);
@@ -86,49 +88,71 @@ const Analytics = () => {
     return Object.values(weeklyData);
   }
 
+  function getImportantSkippedEvents(events) {
+    const filtered = events.filter((event) => event.skippedIsImportant);
+
+    const titleCountMap = {};
+
+    filtered.forEach((event) => {
+      const title = event.skippedReason;
+      titleCountMap[title] = (titleCountMap[title] || 0) + 1;
+    });
+
+    const result = Object.entries(titleCountMap).map(
+      ([skippedReason, count]) => ({
+        name: skippedReason,
+        value: count,
+      })
+    );
+
+    return result;
+  }
+
   // const goalProgressData = [
   //   { name: "Website Redesign", progress: 30 },
   //   { name: "Learn Python", progress: 15 },
   // ];
 
-  function getTotalHoursToday(tasks): number {
-    const today = new Date().toISOString().slice(0, 10); // e.g., '2025-05-12'
-
-    const totalHours = tasks.reduce((sum, task) => {
+  function getTotalHours(tasks) {
+    return tasks.reduce((sum, task) => {
       if (!task.startTime || !task.endTime) return sum;
 
       const start = new Date(task.startTime);
       const end = new Date(task.endTime);
-      const taskDate = task.startTime.slice(0, 10); // compare only date portion
 
-      if (taskDate === today) {
-        const diffInMs = end - start;
-        const diffInHours = diffInMs / (1000 * 60 * 60);
-        return sum + diffInHours;
-      }
+      const diffInMs = end - start;
+      const diffInHours = diffInMs / (1000 * 60 * 60); // Convert milliseconds to hours
 
-      return sum;
+      return sum + diffInHours;
     }, 0);
-
-    return totalHours;
   }
 
-  const specialEventsData = [
-    { name: "Business Networking", value: 3 },
-    { name: "Learning Session", value: 4 },
-    { name: "Family Time", value: 2 },
-    { name: "Personal Project", value: 1 },
-  ];
+  // const specialEventsData = [
+  //   { name: "Business Networking", value: 3 },
+  //   { name: "Learning Session", value: 4 },
+  //   { name: "Family Time", value: 2 },
+  //   { name: "Personal Project", value: 1 },
+  // ];
 
   useEffect(() => {
     async function fetchData() {
       const { data } = await axios.get(`${API_URL}/api/events`);
-      console.log(data);
+      setHour(getTotalHours(data));
       const week = getWeeklyCompletionData(data);
       setWeeklyCompletionData(week);
+      const specia = getImportantSkippedEvents(data);
+      setSpecialEventsData(specia);
     }
     fetchData();
   }, [currentWeek]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data } = await axios.get(`${API_URL}/api/ai/suggestions`);
+      setSuggestion(data);
+    }
+    fetchData();
+  });
 
   useEffect(() => {
     async function fetchData() {
@@ -154,7 +178,7 @@ const Analytics = () => {
 
   const prevWeek = () => {
     setCurrentWeek(subWeeks(currentWeek, 1));
-    console.log(currentWeek);
+    // console.log(currentWeek);
   };
 
   // Calculate summary metrics
@@ -347,7 +371,7 @@ const Analytics = () => {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-warning" />
-              Special Events
+              Reasons for skipping
             </h3>
           </div>
 
@@ -434,30 +458,12 @@ const Analytics = () => {
         </div>
 
         <div className="space-y-4">
-          <div className="p-4 bg-secondary rounded-md">
-            <h4 className="font-medium mb-2">Time Distribution</h4>
-            <p className="text-sm">
-              You're spending 30% more time on meetings compared to last week.
-              Consider blocking out focused work time.
-            </p>
-          </div>
-
-          <div className="p-4 bg-secondary rounded-md">
-            <h4 className="font-medium mb-2">Goal Progress</h4>
-            <p className="text-sm">
-              Your "Website Redesign" goal is on track, but "Learn Python" is
-              falling behind schedule. Consider allocating more time to Python
-              learning this week.
-            </p>
-          </div>
-
-          <div className="p-4 bg-secondary rounded-md">
-            <h4 className="font-medium mb-2">Special Events</h4>
-            <p className="text-sm">
-              Most of your special events are learning-related. This aligns well
-              with your Python learning goal.
-            </p>
-          </div>
+          {suggestion.map((suggestion) => (
+            <div key={suggestion.id} className="p-4 bg-secondary rounded-md">
+              <h4 className="font-medium mb-2">{suggestion.type}</h4>
+              <p className="text-sm">{suggestion.message}</p>
+            </div>
+          ))}
         </div>
 
         <button className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors">

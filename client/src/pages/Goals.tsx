@@ -356,7 +356,7 @@ const Goals = () => {
   async function handleCreateGoal(e) {
     e.preventDefault();
     setShowNewGoalModal(false);
-    console.log(newGoal);
+    // console.log(newGoal);
 
     const { data } = await axios.post(`${URL}/api/goals`, newGoal);
     setGoals((prev) => [...prev, data]);
@@ -380,7 +380,7 @@ const Goals = () => {
   async function handleUpdateGoal(e: any) {
     e.preventDefault();
     setShowNewGoalModal(false);
-    console.log(newGoal);
+    // console.log(newGoal);
 
     await axios.put(`${URL}/api/goals/${newGoal.id}`, newGoal);
     async function req(stap: any) {
