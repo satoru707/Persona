@@ -83,7 +83,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     async function getEvents() {
-      const { data } = await axios.get(`${API_URL}/api/events`);
+      const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
       setEvents(data);
       const week = getWeeklyCompletionData(data);
       setWeeklyCompletionData(week);
