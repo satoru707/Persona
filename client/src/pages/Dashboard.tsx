@@ -334,7 +334,7 @@ const Dashboard = () => {
 
             <div className="space-y-4">
               {upcoming.length > 0 ? (
-                events.slice(0, 4).map((event) => (
+                upcoming.slice(0, 4).map((event) => (
                   <div
                     key={event.id}
                     className="flex items-start gap-3 p-3 bg-secondary rounded-md"
