@@ -28,6 +28,8 @@ const Dashboard = () => {
   const [goalProgressData, setGoalProgressData] = useState([]);
   const [weeklyCompletionData, setWeeklyCompletionData] = useState([]);
   const [specialEventsData, setSpecialEventsData] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);
+
   // function getWeekdayAbbreviation(dateString) {
   //   const date = new Date(dateString);
   //   return date.toLocaleDateString("en-US", { weekday: "short" }); // e.g., "Tue"
@@ -83,12 +85,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     async function getEvents() {
-      const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
+      const { data } = await axios.get(`${API_URL}/api/events`);
       setEvents(data);
       const week = getWeeklyCompletionData(data);
       setWeeklyCompletionData(week);
       const specia = getImportantSkippedEvents(data);
       setSpecialEventsData(specia);
+    }
+    getEvents();
+  }, []);
+
+  useEffect(() => {
+    async function getEvents() {
+      const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
+      setUpcoming(data);
     }
     getEvents();
   }, []);
@@ -155,13 +165,6 @@ const Dashboard = () => {
     (goal) => (perc += parseInt(goal.progress))
   );
   const percentage = percentag.reduce((total, num) => total + num, 0);
-
-  async function handleSuggestions() {
-    const { data } = await axios.get(`${API_URL}/api/ai/suggestions`);
-    setInsights(data);
-    // console.log(data);
-    // console.log("done");
-  }
 
   const totalSpecialEvents = specialEventsData.reduce(
     (sum, item) => sum + item.value,
@@ -330,7 +333,7 @@ const Dashboard = () => {
             </div>
 
             <div className="space-y-4">
-              {events.length > 0 ? (
+              {upcoming.length > 0 ? (
                 events.slice(0, 4).map((event) => (
                   <div
                     key={event.id}
@@ -465,7 +468,7 @@ const Dashboard = () => {
 
             <div className="space-y-4">
               {suggestions.length > 0 ? (
-                suggestions.splice(0, 3).map((suggestion, index) => (
+                suggestions.map((suggestion, index) => (
                   <div key={index} className="p-3 bg-secondary rounded-md">
                     <div className="flex items-start gap-3">
                       {suggestion.type === "schedule" && (
@@ -491,7 +494,12 @@ const Dashboard = () => {
             </div>
 
             <button
-              onClick={() => handleSuggestions}
+              onClick={async () => {
+                const { data } = await axios.get(
+                  `${API_URL}/api/ai/suggestions`
+                );
+                setInsights(data);
+              }}
               className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors"
             >
               Generate New Insights
