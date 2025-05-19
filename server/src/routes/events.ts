@@ -19,7 +19,6 @@ router.get("/", authenticate, async (req, res) => {
   }
 });
 
-Get upcoming events
 router.get("/upcoming", authenticate, async (req, res) => {
   try {
     const now = new Date();
