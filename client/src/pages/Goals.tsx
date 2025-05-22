@@ -356,10 +356,8 @@ const Goals = () => {
   async function handleCreateGoal(e) {
     e.preventDefault();
     setShowNewGoalModal(false);
-    // console.log(newGoal);
-
     const { data } = await axios.post(`${URL}/api/goals`, newGoal);
-    setGoals((prev) => [...prev, data]);
+    console.log(data);
     setNewGoal({
       title: "",
       description: "",
@@ -387,6 +385,15 @@ const Goals = () => {
       await axios.put(`${URL}/api/goals/steps/${stap.id}`, stap);
     }
     newGoal.steps.map((step) => req(step));
+  }
+
+  async function generateSteps(golazo, days: string) {
+    const { data } = await axios.post(`${API_URL}/api/ai/generate-steps`, {
+      goal: golazo,
+      totalDays: days,
+    });
+
+    setSteps(data.steps);
   }
 
   return (
@@ -721,7 +728,7 @@ const Goals = () => {
                 <button
                   type="button"
                   className="w-full btn bg-accent/20 text-accent hover:bg-accent/30 mb-4"
-                  onClick={() => console.log("Generate steps")}
+                  onClick={() => generateSteps(newGoal, newGoal.totalDays)}
                 >
                   Generate Steps with AI
                 </button>

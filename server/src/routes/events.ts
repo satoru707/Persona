@@ -46,7 +46,6 @@ router.get("/upcoming", authenticate, async (req, res) => {
       orderBy: { startTime: "asc" },
       take: 8, // Limit to 5 upcoming events
     });
-    console.log(events);
 
     res.json(events);
   } catch (error) {

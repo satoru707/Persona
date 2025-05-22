@@ -67,7 +67,6 @@ router.get("/active", auth_1.authenticate, async (req, res) => {
             orderBy: { createdAt: "desc" },
             take: 1,
         });
-        console.log(goals);
         // Filter to goals with at least one incomplete step
         const activeGoals = goals.filter((goal) => goal.steps.some((step) => !step.isCompleted));
         res.json(activeGoals);
@@ -247,7 +246,6 @@ router.put("/steps/:id", auth_1.authenticate, async (req, res) => {
                 goal: true,
             },
         });
-        console.log(step, "step");
         if (!step || step.goal.userId !== req.user.id) {
             return res.status(404).json({ message: "Step not found" });
         }

@@ -112,7 +112,23 @@ const Analytics = () => {
   //   { name: "Website Redesign", progress: 30 },
   //   { name: "Learn Python", progress: 15 },
   // ];
+  function filterThisWeek(data, currentWeek) {
+    const endDate = new Date(currentWeek);
+    const startDate = new Date(currentWeek);
+    startDate.setDate(endDate.getDate() - 7);
 
+    return data.filter((item) => {
+      const start = new Date(item.startTime);
+      const end = new Date(item.endTime);
+
+      // Task is considered in the week if it overlaps the week window
+      return (
+        (start >= startDate && start <= endDate) ||
+        (end >= startDate && end <= endDate) ||
+        (start <= startDate && end >= endDate) // fully overlaps the window
+      );
+    });
+  }
   function getTotalHours(tasks) {
     return tasks.reduce((sum, task) => {
       if (!task.startTime || !task.endTime) return sum;
@@ -133,14 +149,27 @@ const Analytics = () => {
   //   { name: "Family Time", value: 2 },
   //   { name: "Personal Project", value: 1 },
   // ];
+  const nextWeek = () => {
+    const date = new Date(currentWeek);
+    date.setDate(date.getDate() + 7);
+    setCurrentWeek(date);
+  };
+
+  const prevWeek = () => {
+    const date = new Date(currentWeek);
+    date.setDate(date.getDate() - 7);
+    setCurrentWeek(date);
+  };
 
   useEffect(() => {
     async function fetchData() {
       const { data } = await axios.get(`${API_URL}/api/events`);
-      setHour(getTotalHours(data));
-      const week = getWeeklyCompletionData(data);
+      const refined = filterThisWeek(data, currentWeek);
+      setHour(getTotalHours(refined));
+      const week = getWeeklyCompletionData(refined);
+
       setWeeklyCompletionData(week);
-      const specia = getImportantSkippedEvents(data);
+      const specia = getImportantSkippedEvents(refined);
       setSpecialEventsData(specia);
     }
     fetchData();
@@ -152,7 +181,7 @@ const Analytics = () => {
       setSuggestion(data);
     }
     fetchData();
-  });
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -171,15 +200,6 @@ const Analytics = () => {
     }
     fetchData();
   }, []);
-
-  const nextWeek = () => {
-    setCurrentWeek(addWeeks(currentWeek, 1));
-  };
-
-  const prevWeek = () => {
-    setCurrentWeek(subWeeks(currentWeek, 1));
-    // console.log(currentWeek);
-  };
 
   // Calculate summary metrics
   const totalCompleted = weeklyCompletionData.reduce(
@@ -260,7 +280,7 @@ const Analytics = () => {
             <h3 className="text-sm font-medium">Completion Rate</h3>
             <CheckCircle className="h-5 w-5 text-success" />
           </div>
-          <p className="text-2xl font-bold">{completionRate}%</p>
+          <p className="text-2xl font-bold">{completionRate || 0}%</p>
           <p className="text-xs text-foreground/70">
             {totalCompleted} completed, {totalSkipped} skipped
           </p>
@@ -422,7 +442,7 @@ const Analytics = () => {
         <div className="space-y-4">
           {goalProgressData.length > 0 ? (
             goalProgressData.map((goal) => (
-              <div key={goal.name} className="space-y-2">
+              <div key={goal.id} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{goal.name}</span>
                   <span className="text-sm bg-accent/20 text-accent px-2 py-0.5 rounded-full">

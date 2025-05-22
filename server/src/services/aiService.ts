@@ -68,7 +68,7 @@ export const generateGoalSteps = async (goal: Goal, totalDays: number) => {
       Description: ${goal.description || "N/A"}
       
       Please break this down into exactly ${stepCount} steps that are evenly distributed over the ${totalDays} days.
-      Each step should have a title, description, and due date.
+      Each step should have a order, title, description, and due date.
       
       Provide the steps in a JSON array with this format:
       [

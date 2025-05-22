@@ -87,7 +87,11 @@ const Dashboard = () => {
     async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/events`);
       setEvents(data);
-      const week = getWeeklyCompletionData(data);
+      const now = new Date();
+
+      const filtered = data.filter((item) => new Date(item.endTime) < now);
+
+      const week = getWeeklyCompletionData(filtered);
       setWeeklyCompletionData(week);
       const specia = getImportantSkippedEvents(data);
       setSpecialEventsData(specia);
@@ -115,12 +119,14 @@ const Dashboard = () => {
     async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/goals`);
       setGoals(data);
+
       const arr: any = [];
       data.map((goal) => {
         const completedSteps = goal.steps.filter(
           (step) => step.isCompleted
         ).length;
         arr.push({
+          id: goal.id,
           name: goal.title,
           progress: ((completedSteps / goal.steps.length) * 100).toFixed(0),
         });
@@ -182,6 +188,7 @@ const Dashboard = () => {
   const completionRate = Math.round(
     (totalCompleted / (totalCompleted + totalSkipped)) * 100
   );
+
   // Mock data
   // const mockEvents: Event[] = [
   //   {
@@ -399,43 +406,40 @@ const Dashboard = () => {
 
             <div className="space-y-4">
               {goals.length > 0 ? (
-                shuffleArray(goals)
-                  .slice(0, 4)
-                  .map((goal) => {
-                    const completedSteps = goal.steps.filter(
-                      (step) => step.isCompleted
-                    ).length;
-                    const progressPercentage = Math.round(
-                      (completedSteps / goal.steps.length) * 100
-                    );
+                goals.slice(0, 4).map((goal) => {
+                  console.log(goal);
 
-                    return (
-                      <div
-                        key={goal.id}
-                        className="p-3 bg-secondary rounded-md"
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-medium">{goal.title}</h3>
-                          <span className="text-xs px-2 py-1 bg-accent/20 text-accent rounded-full">
-                            {progressPercentage}%
-                          </span>
-                        </div>
+                  const completedSteps = goal?.steps?.filter(
+                    (step) => step.isCompleted
+                  ).length;
+                  const progressPercentage = Math.round(
+                    (completedSteps / goal?.steps?.length) * 100
+                  );
 
-                        <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-accent rounded-full transition-all duration-500"
-                            style={{ width: `${progressPercentage}%` }}
-                          ></div>
-                        </div>
-
-                        <div className="mt-3 text-sm text-foreground/70">
-                          Next step:{" "}
-                          {goal.steps.find((step) => !step.isCompleted)
-                            ?.title || "All steps completed!"}
-                        </div>
+                  return (
+                    <div key={goal?.id} className="p-3 bg-secondary rounded-md">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-medium">{goal?.title}</h3>
+                        <span className="text-xs px-2 py-1 bg-accent/20 text-accent rounded-full">
+                          {progressPercentage}%
+                        </span>
                       </div>
-                    );
-                  })
+
+                      <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-accent rounded-full transition-all duration-500"
+                          style={{ width: `${progressPercentage}%` }}
+                        ></div>
+                      </div>
+
+                      <div className="mt-3 text-sm text-foreground/70">
+                        Next step:{" "}
+                        {goal?.steps?.find((step) => !step.isCompleted)
+                          ?.title || "All steps completed!"}
+                      </div>
+                    </div>
+                  );
+                })
               ) : (
                 <div className="p-3  rounded-md">
                   <div className="flex justify-center mb-2 items-center text-center">
@@ -528,7 +532,7 @@ const Dashboard = () => {
                 </div>
                 <p className="text-2xl font-bold mt-2">
                   {" "}
-                  {totalCompleted}/{events.length}
+                  {totalCompleted}/{totalCompleted + totalSkipped}
                 </p>
                 <p className="text-xs text-foreground/70 mt-1">
                   {completionRate}% completion rate
@@ -554,8 +558,8 @@ const Dashboard = () => {
                 <p className="text-2xl font-bold mt-2">
                   {" "}
                   {percentage
-                    ? (percentage / goalProgressData.length).toFixed(1)
-                    : 0}
+                    ? (percentage / goalProgressData.length).toFixed(1) + "%"
+                    : 0 + "%"}
                 </p>
                 <p className="text-xs text-foreground/70 mt-1">
                   On track for completion
