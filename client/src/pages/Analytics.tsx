@@ -238,7 +238,8 @@ const Analytics = () => {
   const percentag = goalProgressData.map(
     (goal) => (perc += parseInt(goal.progress))
   );
-  const percentage = percentag.reduce((total, num) => total + num, 0);
+
+  const percentage = percentag[goalProgressData.length - 1];
 
   return (
     <div>
@@ -486,7 +487,10 @@ const Analytics = () => {
           ))}
         </div>
 
-        <button className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors">
+        <button
+          disabled
+          className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors"
+        >
           Generate New Insights
         </button>
       </motion.div>

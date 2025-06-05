@@ -89,11 +89,17 @@ const Dashboard = () => {
       setEvents(data);
       const now = new Date();
 
-      const filtered = data.filter((item) => new Date(item.endTime) < now);
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday = 0
+      startOfWeek.setHours(0, 0, 0, 0); // Start of the day
 
+      const filtered = data.filter((item) => {
+        const endTime = new Date(item.endTime);
+        return endTime < now && endTime >= startOfWeek;
+      });
       const week = getWeeklyCompletionData(filtered);
       setWeeklyCompletionData(week);
-      const specia = getImportantSkippedEvents(data);
+      const specia = getImportantSkippedEvents(filtered);
       setSpecialEventsData(specia);
     }
     getEvents();
@@ -170,7 +176,8 @@ const Dashboard = () => {
   const percentag = goalProgressData.map(
     (goal) => (perc += parseInt(goal.progress))
   );
-  const percentage = percentag.reduce((total, num) => total + num, 0);
+
+  const percentage = percentag[goalProgressData.length - 1];
 
   const totalSpecialEvents = specialEventsData.reduce(
     (sum, item) => sum + item.value,
@@ -407,7 +414,7 @@ const Dashboard = () => {
             <div className="space-y-4">
               {goals.length > 0 ? (
                 goals.slice(0, 4).map((goal) => {
-                  console.log(goal);
+                  // console.log(goal);
 
                   const completedSteps = goal?.steps?.filter(
                     (step) => step.isCompleted
@@ -472,7 +479,7 @@ const Dashboard = () => {
 
             <div className="space-y-4">
               {suggestions.length > 0 ? (
-                suggestions.map((suggestion, index) => (
+                suggestions.slice(0, 4).map((suggestion, index) => (
                   <div key={index} className="p-3 bg-secondary rounded-md">
                     <div className="flex items-start gap-3">
                       {suggestion.type === "schedule" && (
@@ -535,7 +542,7 @@ const Dashboard = () => {
                   {totalCompleted}/{totalCompleted + totalSkipped}
                 </p>
                 <p className="text-xs text-foreground/70 mt-1">
-                  {completionRate}% completion rate
+                  {completionRate || 0}% completion rate
                 </p>
               </div>
 

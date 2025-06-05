@@ -49,6 +49,46 @@ const Header = ({ openSidebar }: HeaderProps) => {
     };
   }, []);
   const navigate = useNavigate();
+
+  const publicVapidKey =
+    "BD6B4nGsTj9potclGJfdWsypAbDEfAnjvXDh6BBb2RshaSJx19kWAQWSr-4rUwFm2LbpqJS9v4hKtn4UXW8BNVo";
+
+  async function subscribeUser() {
+    console.log("Going through");
+    const registration = await navigator.serviceWorker.register("/sw.js");
+    console.log("Going through");
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
+    });
+
+    console.log(subscription);
+    console.log("Going through");
+
+    await fetch("/api/save-subscription", {
+      method: "POST",
+      body: JSON.stringify(subscription),
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const raw = atob(base64);
+    return new Uint8Array([...raw].map((char) => char.charCodeAt(0)));
+  }
+
+  // Call this after asking for notification permission:
+  Notification.requestPermission().then((permission) => {
+    if (permission === "granted") {
+      subscribeUser();
+    }
+  });
+
   return (
     <header className="py-4 px-6 bg-card border-b border-border flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -119,7 +159,10 @@ const Header = ({ openSidebar }: HeaderProps) => {
         <div className="relative" ref={notificationsRef}>
           <button
             className="p-2 rounded-md hover:bg-secondary relative"
-            onClick={() => setNotificationsOpen(!notificationsOpen)}
+            onClick={() => {
+              subscribeUser();
+              setNotificationsOpen(!notificationsOpen);
+            }}
           >
             <BellRing className="h-5 w-5" />
             <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-accent"></span>
@@ -136,7 +179,7 @@ const Header = ({ openSidebar }: HeaderProps) => {
                 <div className="px-4 py-2 border-b border-border">
                   <h3 className="text-sm font-medium">Notifications</h3>
                 </div>
-                <div className="max-h-60 overflow-y-auto">
+                {/* <div className="max-h-60 overflow-y-auto">
                   <div className="py-2 px-4 hover:bg-secondary">
                     <p className="text-sm">
                       Daily standup meeting in 15 minutes
@@ -153,7 +196,7 @@ const Header = ({ openSidebar }: HeaderProps) => {
                       1 hour ago
                     </p>
                   </div>
-                </div>
+                </div> */}
                 <a
                   href="#"
                   className="block text-center text-sm text-accent py-2 border-t border-border"
@@ -193,12 +236,6 @@ const Header = ({ openSidebar }: HeaderProps) => {
                 exit={{ opacity: 0, y: -5 }}
                 className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg py-1 z-10 border border-border"
               >
-                <a
-                  href="#"
-                  className="block px-4 py-2 text-sm hover:bg-secondary"
-                >
-                  Your Profile
-                </a>
                 <a
                   href="/auths/settings"
                   className="block px-4 py-2 text-sm hover:bg-secondary md:inline-fle"
