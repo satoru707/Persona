@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const auth_1 = require("../middleware/auth");
+const index_1 = require("../index");
 const web_push_1 = __importDefault(require("web-push"));
 const router = express_1.default.Router();
 const vapidKeys = {
@@ -12,21 +14,46 @@ const vapidKeys = {
 };
 web_push_1.default.setVapidDetails("mailto:petolulope7@gmail.com", vapidKeys.publicKey, vapidKeys.privateKey);
 let subscriptions = [];
-router.post("/save-subscription", (req, res) => {
+router.post("/save-subscription", auth_1.authenticate, async (req, res) => {
     const subscription = req.body;
-    console.log(subscription);
-    subscriptions.push(subscription); // Save to DB in production
-    res.status(201).json({ message: "Subscription saved" });
+    const { endpoint, keys } = subscription;
+    try {
+        await index_1.prisma.pushSubscription.upsert({
+            where: { endpoint },
+            update: { auth: keys.auth, p256dh: keys.p256dh },
+            create: {
+                endpoint,
+                auth: keys.auth,
+                p256dh: keys.p256dh,
+            },
+        });
+        res.status(201).json({ message: "Subscription saved" });
+    }
+    catch (err) {
+        console.error("Save error:", err);
+        res.status(500).json({ error: "Failed to save subscription" });
+    }
 });
-router.post("/send-notification", async (req, res) => {
+router.post("/send-notification", auth_1.authenticate, async (req, res) => {
+    const { title, body } = req.body;
     const payload = JSON.stringify({
-        title: "Reminder!",
-        body: "You have a task due soon 🚨",
-        url: "https://yourapp.com/tasks",
-        image: "https://yourapp.com/banner.jpg",
+        title: title || "New Notification",
+        body: body || "This is the default notification body",
     });
     try {
-        await Promise.all(subscriptions.map((sub) => webPush.sendNotification(sub, payload)));
+        const allSubs = await index_1.prisma.pushSubscription.findMany();
+        await Promise.all(allSubs.map((sub) => {
+            const pushConfig = {
+                endpoint: sub.endpoint,
+                keys: {
+                    auth: sub.auth,
+                    p256dh: sub.p256dh,
+                },
+            };
+            return web_push_1.default.sendNotification(pushConfig, payload).catch((err) => {
+                console.error("Send error:", err);
+            });
+        }));
         res.status(200).json({ message: "Notifications sent" });
     }
     catch (err) {

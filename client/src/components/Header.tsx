@@ -54,9 +54,7 @@ const Header = ({ openSidebar }: HeaderProps) => {
     "BD6B4nGsTj9potclGJfdWsypAbDEfAnjvXDh6BBb2RshaSJx19kWAQWSr-4rUwFm2LbpqJS9v4hKtn4UXW8BNVo";
 
   async function subscribeUser() {
-    console.log("Going through");
     const registration = await navigator.serviceWorker.register("/sw.js");
-    console.log("Going through");
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(publicVapidKey),

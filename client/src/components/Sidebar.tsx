@@ -133,16 +133,6 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
             ))}
           </ul>
         </div>
-
-        <div className="p-4 border-t border-border">
-          <div className="bg-secondary rounded-md p-3">
-            <h3 className="font-medium mb-1">AI Suggestion</h3>
-            <p className="text-sm text-foreground/80">
-              Consider adding a 15-minute break after your "Design Meeting"
-              today to process insights.
-            </p>
-          </div>
-        </div>
       </motion.nav>
     </>
   );

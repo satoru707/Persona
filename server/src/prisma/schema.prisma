@@ -54,3 +54,11 @@ model Step {
   goalId      String
   goal        Goal      @relation(fields: [goalId], references: [id])
 }
+
+model PushSubscription {
+  id          String   @id @default(cuid())
+  endpoint    String   @unique
+  auth        String
+  p256dh      String
+  createdAt   DateTime @default(now())
+}

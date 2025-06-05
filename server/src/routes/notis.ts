@@ -2,7 +2,6 @@ import express from "express";
 import { authenticate } from "../middleware/auth";
 import { prisma } from "../index";
 import webpush from "web-push";
-import { log } from "console";
 
 const router = express.Router();
 
@@ -19,25 +18,54 @@ webpush.setVapidDetails(
 
 let subscriptions = [];
 
-router.post("/save-subscription", (req, res) => {
+router.post("/save-subscription", authenticate, async (req, res) => {
   const subscription = req.body;
-  console.log(subscription);
 
-  subscriptions.push(subscription); // Save to DB in production
-  res.status(201).json({ message: "Subscription saved" });
+  const { endpoint, keys } = subscription;
+
+  try {
+    await prisma.pushSubscription.upsert({
+      where: { endpoint },
+      update: { auth: keys.auth, p256dh: keys.p256dh },
+      create: {
+        endpoint,
+        auth: keys.auth,
+        p256dh: keys.p256dh,
+      },
+    });
+
+    res.status(201).json({ message: "Subscription saved" });
+  } catch (err) {
+    console.error("Save error:", err);
+    res.status(500).json({ error: "Failed to save subscription" });
+  }
 });
 
-router.post("/send-notification", async (req, res) => {
+router.post("/send-notification", authenticate, async (req, res) => {
+  const { title, body } = req.body;
+
   const payload = JSON.stringify({
-    title: "Reminder!",
-    body: "You have a task due soon 🚨",
-    url: "https://yourapp.com/tasks",
-    image: "https://yourapp.com/banner.jpg",
+    title: title || "New Notification",
+    body: body || "This is the default notification body",
   });
 
   try {
+    const allSubs = await prisma.pushSubscription.findMany();
+
     await Promise.all(
-      subscriptions.map((sub) => webPush.sendNotification(sub, payload))
+      allSubs.map((sub) => {
+        const pushConfig = {
+          endpoint: sub.endpoint,
+          keys: {
+            auth: sub.auth,
+            p256dh: sub.p256dh,
+          },
+        };
+
+        return webpush.sendNotification(pushConfig, payload).catch((err) => {
+          console.error("Send error:", err);
+        });
+      })
     );
     res.status(200).json({ message: "Notifications sent" });
   } catch (err) {

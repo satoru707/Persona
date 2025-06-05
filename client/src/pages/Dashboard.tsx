@@ -22,7 +22,6 @@ import "../index.css";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
-  const [events, setEvents] = useState<Event[]>([]);
   const [goals, setGoals] = useState([]);
   const [suggestions, setInsights] = useState([]);
   const [goalProgressData, setGoalProgressData] = useState([]);
@@ -86,7 +85,6 @@ const Dashboard = () => {
   useEffect(() => {
     async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/events`);
-      setEvents(data);
       const now = new Date();
 
       const startOfWeek = new Date(now);
@@ -97,6 +95,7 @@ const Dashboard = () => {
         const endTime = new Date(item.endTime);
         return endTime < now && endTime >= startOfWeek;
       });
+
       const week = getWeeklyCompletionData(filtered);
       setWeeklyCompletionData(week);
       const specia = getImportantSkippedEvents(filtered);
@@ -110,6 +109,7 @@ const Dashboard = () => {
       const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
       setUpcoming(data);
     }
+
     getEvents();
   }, []);
   // const specialEventsData = [
@@ -159,20 +159,7 @@ const Dashboard = () => {
     }, 800);
   }, []);
 
-  function shuffleArray(array: [any]) {
-    let currentIndex = array.length;
-    while (currentIndex != 0) {
-      const randomIndex = Math.floor(Math.random() + currentIndex);
-      currentIndex--;
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex],
-        array[currentIndex],
-      ];
-    }
-    return array;
-  }
-
-  var perc = 0;
+  let perc: number = 0;
   const percentag = goalProgressData.map(
     (goal) => (perc += parseInt(goal.progress))
   );
