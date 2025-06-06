@@ -115,25 +115,6 @@ const Dashboard = () => {
     getEvents();
   }, []);
 
-  useEffect(() => {
-    let timeoutId: any;
-
-    async function run() {
-      await runDailyNotifications(upcoming, suggestions);
-    }
-
-    if (suggestions.length > 0 && upcoming.length > 0) {
-      timeoutId = setTimeout(() => {
-        run();
-      }, 30000);
-    }
-
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [upcoming, suggestions]);
   // const specialEventsData = [
   //   { name: "Business Networking", value: 3 },
   //   { name: "Learning Session", value: 4 },
@@ -181,6 +162,25 @@ const Dashboard = () => {
     }, 800);
   }, []);
 
+  useEffect(() => {
+    let timeoutId: any;
+
+    async function run() {
+      await runDailyNotifications(upcoming, suggestions);
+    }
+
+    if (suggestions.length > 0 && upcoming.length > 0) {
+      timeoutId = setTimeout(() => {
+        run();
+      }, 30000);
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [upcoming, suggestions, navigate]);
   let perc: number = 0;
   const percentag = goalProgressData.map(
     (goal) => (perc += parseInt(goal.progress))
