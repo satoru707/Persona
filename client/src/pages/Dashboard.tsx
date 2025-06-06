@@ -109,6 +109,7 @@ const Dashboard = () => {
     async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
       // console.log(data);
+      await runDailyNotifications(data, []);
       setUpcoming(data);
     }
 
@@ -162,25 +163,17 @@ const Dashboard = () => {
     }, 800);
   }, []);
 
-  useEffect(() => {
-    let timeoutId: any;
+  // useEffect(() => {
+  //   async function run() {
+  //     await runDailyNotifications(upcoming, suggestions);
+  //     console.log(upcoming);
+  //   }
 
-    async function run() {
-      await runDailyNotifications(upcoming, suggestions);
-    }
-
-    if (suggestions.length > 0 && upcoming.length > 0) {
-      timeoutId = setTimeout(() => {
-        run();
-      }, 30000);
-    }
-
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [upcoming, suggestions, navigate]);
+  //   if (upcoming) {
+  //     run();
+  //     console.log("ran");
+  //   }
+  // }, [upcoming, suggestions]);
   let perc: number = 0;
   const percentag = goalProgressData.map(
     (goal) => (perc += parseInt(goal.progress))

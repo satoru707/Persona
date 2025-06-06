@@ -89,32 +89,35 @@ router.post("/send-notification", auth_1.authenticate, async (req, res) => {
             "This is your moment — get started now!",
             "The countdown's over — your activity begins now",
         ];
-    const payload = JSON.stringify({
-        title: title || "New Notification",
-        body: rando[Math.floor(Math.random() * rando.length)],
-        icon: `${url}/logo.svg`,
-    });
-    addNotification(body || title);
-    try {
-        const allSubs = await index_1.prisma.pushSubscription.findMany();
-        await Promise.all(allSubs.map((sub) => {
-            const pushConfig = {
-                endpoint: sub.endpoint,
-                keys: {
-                    auth: sub.auth,
-                    p256dh: sub.p256dh,
-                },
-            };
-            return web_push_1.default.sendNotification(pushConfig, payload).catch((err) => {
-                console.error("Send error:", err);
-            });
-        }));
-        res.status(200).json({ message: "Notifications sent" });
-    }
-    catch (err) {
-        console.error("Notification error:", err);
-        res.sendStatus(500);
-    }
+    setTimeout(async () => {
+        const payload = JSON.stringify({
+            title: title || "New Notification",
+            body: rando[Math.floor(Math.random() * rando.length)],
+            icon: `${url}/logo.svg`,
+        });
+        addNotification(body || title);
+        console.log("Notifications:", notifications);
+        try {
+            const allSubs = await index_1.prisma.pushSubscription.findMany();
+            await Promise.all(allSubs.map((sub) => {
+                const pushConfig = {
+                    endpoint: sub.endpoint,
+                    keys: {
+                        auth: sub.auth,
+                        p256dh: sub.p256dh,
+                    },
+                };
+                return web_push_1.default.sendNotification(pushConfig, payload).catch((err) => {
+                    console.error("Send error:", err);
+                });
+            }));
+            res.status(200).json({ message: "Notifications sent" });
+        }
+        catch (err) {
+            console.error("Notification error:", err);
+            res.sendStatus(500);
+        }
+    }, 30000);
 });
 router.get("/notis", auth_1.authenticate, async (req, res) => {
     const notis = getFormattedNotifications();

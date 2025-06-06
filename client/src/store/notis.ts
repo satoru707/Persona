@@ -5,32 +5,35 @@ import { API_URL } from "../config";
 async function sendUpcomingEventNotifications(events: [any]) {
   const now = new Date();
   console.log("trying");
-
+  if (!events) return;
   for (const event of events) {
     if (event.isCompleted || !event.startTime) continue;
 
     const startTime = new Date(event.startTime);
-    const notificationTime = new Date(startTime.getTime() - 58 * 60 * 1000); // 10 mins before
-    console.log("14");
+    const notificationTime = new Date(startTime.getTime() - 13 * 60 * 1000); // 10 mins before
 
-    if (now < notificationTime || now == startTime) {
-      // const timeUntilNotification = notificationTime.getTime() - now.getTime();
-      console.log("17");
+    if (now < notificationTime) {
+      const timeUntilNotification = notificationTime.getTime() - now.getTime();
+      console.log("part of timeUntilNotification", timeUntilNotification);
 
       setTimeout(async () => {
         try {
           await axios.post(`${API_URL}/api/notis/send-notification`, {
             title: event.title,
             body: event.description,
-            type: now == notificationTime ? "now" : "upcoming",
           });
+          console.log(`Notification sent for event: ${event.title}`);
         } catch (error) {
           console.error(
             `Failed to send notification for event ${event.title}:`,
             error.message
           );
         }
-      }, 1000 * 10);
+      }, timeUntilNotification);
+
+      console.log(
+        `Scheduled notification for event: ${event.title} at ${notificationTime}`
+      );
     }
   }
 }
@@ -61,8 +64,10 @@ async function runDailyNotifications(
   suggestionsResponse: any
 ) {
   try {
+    // console.log(eventsResponse);
+
+    // if (!eventsResponse) return;
     await sendUpcomingEventNotifications(eventsResponse);
-    console.log(eventsResponse);
 
     // Fetch AI suggestions and send notifications
 
@@ -71,7 +76,7 @@ async function runDailyNotifications(
   } catch (error) {
     console.error("Error in daily notification processing:", error.message);
   } finally {
-    setTimeout(runDailyNotifications, 10 * 1000);
+    setTimeout(runDailyNotifications, 3 * 1000);
   }
 }
 
