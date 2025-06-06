@@ -81,14 +81,23 @@ router.post("/save-subscription", authenticate, async (req, res) => {
 });
 
 router.post("/send-notification", authenticate, async (req, res) => {
-  const { title, body } = req.body;
-  const rando = [
-    "Your scheduled event is about to begin. Don't miss it!",
-    "Just a reminder — your event starts in a few minutes.",
-    "Stay prepared! You're almost there.",
-    "Time to wrap up — your next task is approaching.",
-    "Your next scheduled activity is around the corner.",
-  ];
+  const { title, body, type } = req.body;
+  const rando =
+    type == "upcoming"
+      ? [
+          "Your scheduled event is about to begin. Don't miss it!",
+          "Just a reminder — your event starts in a few minutes.",
+          "Stay prepared! You're almost there.",
+          "Time to wrap up — your next task is approaching.",
+          "Your next scheduled activity is around the corner.",
+        ]
+      : [
+          "Your scheduled event is starting now.",
+          "It's time to jump in — your event is live!",
+          "Go time! You're all set to begin.",
+          "This is your moment — get started now!",
+          "The countdown's over — your activity begins now",
+        ];
   const payload = JSON.stringify({
     title: title || "New Notification",
     body: body || rando[Math.floor(Math.random() * rando.length)],

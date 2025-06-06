@@ -11,7 +11,7 @@ async function sendUpcomingEventNotifications(events: [any]) {
     const startTime = new Date(event.startTime);
     const notificationTime = new Date(startTime.getTime() - 10 * 60 * 1000); // 10 mins before
 
-    if (now < notificationTime) {
+    if (now < notificationTime || now == startTime) {
       const timeUntilNotification = notificationTime.getTime() - now.getTime();
 
       setTimeout(async () => {
@@ -19,6 +19,7 @@ async function sendUpcomingEventNotifications(events: [any]) {
           await axios.post(`${API_URL}/api/notis/send-notification`, {
             title: event.title,
             body: event.description,
+            type: now == notificationTime ? "now" : "upcoming",
           });
         } catch (error) {
           console.error(
