@@ -39,11 +39,11 @@ git clone https://github.com/satoru707/Persona.git
 cd Persona
 
 # Install dependencies
+cd client
 npm install
+npm start
 
-# Set up your environment
-cp .env.example .env
-# Fill in your environment variables (DB URL, Gemini API key, etc.)
+cd server
+npm install
+npm start
 
-# Start the development server
-npm run dev
