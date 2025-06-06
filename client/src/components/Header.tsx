@@ -12,6 +12,8 @@ import { useAuthStore } from "../store/authStore";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { API_URL } from "../config";
 
 interface HeaderProps {
   openSidebar: () => void;
@@ -21,6 +23,8 @@ const Header = ({ openSidebar }: HeaderProps) => {
   const { theme, toggleTheme } = useThemeStore();
   const { user } = useAuthStore();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notis, setNotis] = useState([]);
+  const [number, setNumber] = useState(3);
   const [profileOpen, setProfileOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -48,6 +52,14 @@ const Header = ({ openSidebar }: HeaderProps) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    async function getNotis() {
+      const { data } = await axios.get(`${API_URL}/api/notis/notis`);
+      setNotis(data);
+    }
+    getNotis();
+  }, []);
   const navigate = useNavigate();
 
   const publicVapidKey =
@@ -59,14 +71,8 @@ const Header = ({ openSidebar }: HeaderProps) => {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
     });
-
-    console.log(subscription);
-    console.log("Going through");
-
-    await fetch("/api/save-subscription", {
-      method: "POST",
-      body: JSON.stringify(subscription),
-      headers: { "Content-Type": "application/json" },
+    await axios.post(`${API_URL}/api/notis/save-subscription`, {
+      subscription: JSON.stringify(subscription),
     });
   }
 
@@ -177,30 +183,35 @@ const Header = ({ openSidebar }: HeaderProps) => {
                 <div className="px-4 py-2 border-b border-border">
                   <h3 className="text-sm font-medium">Notifications</h3>
                 </div>
-                {/* <div className="max-h-60 overflow-y-auto">
-                  <div className="py-2 px-4 hover:bg-secondary">
-                    <p className="text-sm">
-                      Daily standup meeting in 15 minutes
-                    </p>
-                    <p className="text-xs text-foreground/70 mt-1">
-                      10 minutes ago
-                    </p>
+                {notis.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto">
+                    {[...notis]
+                      .reverse()
+                      .splice(0, number)
+                      .map((noti, index) => (
+                        <div
+                          key={index}
+                          className="py-2 px-4 hover:bg-secondary"
+                        >
+                          <p className="text-sm">{noti.body}</p>
+                          <p className="text-xs text-foreground/70 mt-1">
+                            {noti.timeAgo}
+                          </p>
+                        </div>
+                      ))}
                   </div>
-                  <div className="py-2 px-4 hover:bg-secondary">
-                    <p className="text-sm">
-                      Website redesign goal: Step 3 is due today
-                    </p>
-                    <p className="text-xs text-foreground/70 mt-1">
-                      1 hour ago
-                    </p>
+                ) : (
+                  <div className="py-2 px-4">
+                    <p className="text-sm">Watch JuJustu kaisen today!</p>
                   </div>
-                </div> */}
-                <a
-                  href="#"
-                  className="block text-center text-sm text-accent py-2 border-t border-border"
+                )}
+                <button
+                  onClick={() => setNumber(notis.length)}
+                  className="block text-center text-sm text-accent  border-t px-4 py-2 border-b border-border"
+                  {...(!notis.length && { disabled: true })}
                 >
                   View all notifications
-                </a>
+                </button>
               </motion.div>
             )}
           </AnimatePresence>

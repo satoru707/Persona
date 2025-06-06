@@ -16,11 +16,10 @@ async function sendUpcomingEventNotifications(events: [any]) {
 
       setTimeout(async () => {
         try {
-          await axios.post("/send-notification", {
+          await axios.post(`${API_URL}/api/notis/send-notification`, {
             title: event.title,
             body: event.description,
           });
-          console.log(`Notification sent for event: ${event.title}`);
         } catch (error) {
           console.error(
             `Failed to send notification for event ${event.title}:`,
@@ -28,47 +27,40 @@ async function sendUpcomingEventNotifications(events: [any]) {
           );
         }
       }, timeUntilNotification);
-
-      console.log(
-        `Scheduled notification for event: ${event.title} at ${notificationTime}`
-      );
     }
   }
 }
 
 // Function to send AI suggestion notifications
 async function sendAiSuggestionNotifications(suggestions: [any]) {
-  for (const suggestion of suggestions) {
-    try {
-      await axios.post("/send-notification", {
-        title:
-          suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1),
-        body: suggestion.message,
-      });
-      console.log(`Notification sent for ${suggestion.type} suggestion`);
-    } catch (error) {
-      console.error(
-        `Failed to send notification for ${suggestion.type} suggestion:`,
-        error.message
-      );
+  setTimeout(async () => {
+    for (const suggestion of suggestions) {
+      try {
+        await axios.post(`${API_URL}/api/notis/send-notification`, {
+          title:
+            suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1),
+          body: suggestion.message,
+        });
+      } catch (error) {
+        console.error(
+          `Failed to send notification for ${suggestion.type} suggestion:`,
+          error.message
+        );
+      }
     }
-  }
+  }, 1000 * 60 * 60);
 }
 
 // Main function that runs every 24 hours
-async function runDailyNotifications() {
+async function runDailyNotifications(
+  eventsResponse: any,
+  suggestionsResponse: any
+) {
   try {
-    // Fetch upcoming events and send notifications
-    const eventsResponse = await axios.get(`${API_URL}/api/events/upcoming`);
-    await sendUpcomingEventNotifications(eventsResponse.data);
-
+    await sendUpcomingEventNotifications(eventsResponse);
     // Fetch AI suggestions and send notifications
-    const suggestionsResponse = await axios.get(
-      `${API_URL}/api/ai/suggestions`
-    );
-    await sendAiSuggestionNotifications(suggestionsResponse.data);
 
-    console.log("Daily notification processing completed");
+    await sendAiSuggestionNotifications(suggestionsResponse);
   } catch (error) {
     console.error("Error in daily notification processing:", error.message);
   } finally {
@@ -76,4 +68,4 @@ async function runDailyNotifications() {
   }
 }
 
-runDailyNotifications();
+export default runDailyNotifications;

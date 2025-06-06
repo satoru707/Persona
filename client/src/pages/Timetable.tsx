@@ -14,7 +14,6 @@ import {
 import { motion } from "framer-motion";
 import { Event } from "../types";
 import axios from "axios";
-// import { sk } from "date-fns/locale";
 
 // Create base dates for events
 // const today = new Date();
@@ -146,7 +145,6 @@ const Timetable = () => {
     }
     setShowNewEventModal(false);
     await axios.post(`${BACKURL}/api/events`, newEvent);
-
     setNewEvent({
       title: "",
       description: "",

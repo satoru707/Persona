@@ -151,13 +151,14 @@ const Settings = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 ">
                   Display Name
                 </label>
                 <input
                   type="text"
                   className="input w-full"
                   defaultValue={user?.name}
+                  disabled
                 />
               </div>
             </div>

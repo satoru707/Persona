@@ -11,6 +11,7 @@ import {
   Activity,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import runDailyNotifications from "../store/notis";
 // import {
 //   Event,
 //   Goal,
@@ -107,11 +108,32 @@ const Dashboard = () => {
   useEffect(() => {
     async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
+      // console.log(data);
       setUpcoming(data);
     }
 
     getEvents();
   }, []);
+
+  useEffect(() => {
+    let timeoutId: any;
+
+    async function run() {
+      await runDailyNotifications(upcoming, suggestions);
+    }
+
+    if (suggestions.length > 0 && upcoming.length > 0) {
+      timeoutId = setTimeout(() => {
+        run();
+      }, 30000);
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [upcoming, suggestions]);
   // const specialEventsData = [
   //   { name: "Business Networking", value: 3 },
   //   { name: "Learning Session", value: 4 },

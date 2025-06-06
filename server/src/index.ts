@@ -34,7 +34,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/ai", aiRoutes);
-app.use("api/notis", subRoute);
+app.use("/api/notis", subRoute);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

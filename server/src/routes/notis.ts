@@ -2,6 +2,7 @@ import express from "express";
 import { authenticate } from "../middleware/auth";
 import { prisma } from "../index";
 import webpush from "web-push";
+import { get } from "node:https";
 
 const router = express.Router();
 
@@ -17,16 +18,54 @@ webpush.setVapidDetails(
 );
 
 let subscriptions = [];
+let notifications: any = [];
+function formatTimeAgo(timestamp: any) {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const minutes = Math.floor(diff / (1000 * 60));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  return `${days} day${days > 1 ? "s" : ""} ago`;
+}
+
+function cleanOldNotifications() {
+  const now = Date.now();
+  const threeDaysInMs = 1000 * 60 * 60 * 24 * 3;
+  for (let i = notifications.length - 1; i >= 0; i--) {
+    if (now - notifications[i].timestamp > threeDaysInMs) {
+      notifications.splice(i, 1);
+    }
+  }
+}
+
+function addNotification(body) {
+  const timestamp = Date.now();
+  cleanOldNotifications();
+
+  notifications.push({ body, timestamp });
+}
+
+function getFormattedNotifications() {
+  return notifications.map((noti) => ({
+    body: noti.body,
+    timeAgo: formatTimeAgo(noti.timestamp),
+  }));
+}
 
 router.post("/save-subscription", authenticate, async (req, res) => {
-  const subscription = req.body;
-
-  const { endpoint, keys } = subscription;
+  const { subscription } = req.body;
+  const parsedSubscription = JSON.parse(subscription);
+  const { endpoint, keys } = parsedSubscription;
 
   try {
     await prisma.pushSubscription.upsert({
       where: { endpoint },
-      update: { auth: keys.auth, p256dh: keys.p256dh },
+      update: { auth: keys?.auth, p256dh: keys?.p256dh },
       create: {
         endpoint,
         auth: keys.auth,
@@ -43,11 +82,19 @@ router.post("/save-subscription", authenticate, async (req, res) => {
 
 router.post("/send-notification", authenticate, async (req, res) => {
   const { title, body } = req.body;
-
+  const rando = [
+    "Your scheduled event is about to begin. Don't miss it!",
+    "Just a reminder — your event starts in a few minutes.",
+    "Stay prepared! You're almost there.",
+    "Time to wrap up — your next task is approaching.",
+    "Your next scheduled activity is around the corner.",
+  ];
   const payload = JSON.stringify({
     title: title || "New Notification",
-    body: body || "This is the default notification body",
+    body: body || rando[Math.floor(Math.random() * rando.length)],
   });
+
+  addNotification(body || title);
 
   try {
     const allSubs = await prisma.pushSubscription.findMany();
@@ -61,7 +108,6 @@ router.post("/send-notification", authenticate, async (req, res) => {
             p256dh: sub.p256dh,
           },
         };
-
         return webpush.sendNotification(pushConfig, payload).catch((err) => {
           console.error("Send error:", err);
         });
@@ -72,6 +118,11 @@ router.post("/send-notification", authenticate, async (req, res) => {
     console.error("Notification error:", err);
     res.sendStatus(500);
   }
+});
+
+router.get("/notis", authenticate, async (req, res) => {
+  const notis = getFormattedNotifications();
+  res.json(notis);
 });
 
 export default router;

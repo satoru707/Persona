@@ -35,7 +35,7 @@ app.use("/api/users", users_1.default);
 app.use("/api/events", events_1.default);
 app.use("/api/goals", goals_1.default);
 app.use("/api/ai", ai_1.default);
-app.use("api/notis", notis_1.default);
+app.use("/api/notis", notis_1.default);
 // Health check endpoint
 app.get("/health", (req, res) => {
     res.status(200).json({ status: "ok" });
