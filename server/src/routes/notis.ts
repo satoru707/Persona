@@ -2,7 +2,7 @@ import express from "express";
 import { authenticate } from "../middleware/auth";
 import { prisma } from "../index";
 import webpush from "web-push";
-import { get } from "node:https";
+import "dotenv/config";
 
 const router = express.Router();
 
@@ -16,6 +16,8 @@ webpush.setVapidDetails(
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
+
+const url = process.env.CLIENT_URL || "http://localhost:5173";
 
 let subscriptions = [];
 let notifications: any = [];
@@ -100,7 +102,8 @@ router.post("/send-notification", authenticate, async (req, res) => {
         ];
   const payload = JSON.stringify({
     title: title || "New Notification",
-    body: body || rando[Math.floor(Math.random() * rando.length)],
+    body: rando[Math.floor(Math.random() * rando.length)],
+    icon: `${url}/logo.svg`,
   });
 
   addNotification(body || title);
