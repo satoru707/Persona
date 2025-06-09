@@ -17,7 +17,7 @@ webpush.setVapidDetails(
   vapidKeys.privateKey
 );
 
-const url = process.env.SERVER_URL || "http://localhost:3000";
+const url = process.env.BACKEND_URL || "http://localhost:3000";
 
 let subscriptions = [];
 let notifications: any = [];
