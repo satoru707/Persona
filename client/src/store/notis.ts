@@ -10,7 +10,7 @@ async function sendUpcomingEventNotifications(events: [any]) {
     if (event.isCompleted || !event.startTime) continue;
 
     const startTime = new Date(event.startTime);
-    const notificationTime = new Date(startTime.getTime() - 16 * 60 * 1000); // 10 mins before
+    const notificationTime = new Date(startTime.getTime() - 10 * 60 * 1000); // 10 mins before
 
     if (now < notificationTime || notificationTime == now) {
       const timeUntilNotification = notificationTime.getTime() - now.getTime();
