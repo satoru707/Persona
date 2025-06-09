@@ -25,6 +25,7 @@ const port = process.env.PORT || 3000;
 const URL = process.env.CLIENT_URL || "http://localhost:5173";
 // Middleware
 app.use(express_1.default.json());
+app.use(express_1.default.static("public"));
 app.use((0, cors_1.default)({
     origin: URL,
     credentials: true,

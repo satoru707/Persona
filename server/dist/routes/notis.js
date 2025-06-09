@@ -14,7 +14,7 @@ const vapidKeys = {
     privateKey: process.env.PRIVATE_KEY,
 };
 web_push_1.default.setVapidDetails("mailto:petolulope7@gmail.com", vapidKeys.publicKey, vapidKeys.privateKey);
-const url = process.env.CLIENT_URL || "http://localhost:5173";
+const url = process.env.SERVER_URL || "http://localhost:3000";
 let subscriptions = [];
 let notifications = [];
 function formatTimeAgo(timestamp) {
