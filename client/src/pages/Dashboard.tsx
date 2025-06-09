@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 // import { useQuery } from "react-query";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -29,6 +29,8 @@ const Dashboard = () => {
   const [weeklyCompletionData, setWeeklyCompletionData] = useState([]);
   const [specialEventsData, setSpecialEventsData] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
+  const hasFetched = useRef(false);
+  const notisCalled = useRef(false);
 
   // function getWeekdayAbbreviation(dateString) {
   //   const date = new Date(dateString);
@@ -106,9 +108,10 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    if (hasFetched.current) return;
     async function getEvents() {
       const { data } = await axios.get(`${API_URL}/api/events/upcoming`);
-      // console.log(data);
+      hasFetched.current = true;
       await runDailyNotifications(data, []);
       setUpcoming(data);
     }
@@ -116,6 +119,16 @@ const Dashboard = () => {
     getEvents();
   }, []);
 
+  // useEffect(() => {
+  //   async function runNotis() {
+  //     if (notisCalled.current || !upcoming || !suggestions) return;
+
+  //     notisCalled.current = true; // Mark as called immediately
+  //     await runDailyNotifications(upcoming, suggestions);
+  //   }
+
+  //   runNotis();
+  // }, [upcoming, suggestions]);
   // const specialEventsData = [
   //   { name: "Business Networking", value: 3 },
   //   { name: "Learning Session", value: 4 },

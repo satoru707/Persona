@@ -10,9 +10,9 @@ async function sendUpcomingEventNotifications(events: [any]) {
     if (event.isCompleted || !event.startTime) continue;
 
     const startTime = new Date(event.startTime);
-    const notificationTime = new Date(startTime.getTime() - 13 * 60 * 1000); // 10 mins before
+    const notificationTime = new Date(startTime.getTime() - 16 * 60 * 1000); // 10 mins before
 
-    if (now < notificationTime) {
+    if (now < notificationTime || notificationTime == now) {
       const timeUntilNotification = notificationTime.getTime() - now.getTime();
       console.log("part of timeUntilNotification", timeUntilNotification);
 
@@ -21,6 +21,7 @@ async function sendUpcomingEventNotifications(events: [any]) {
           await axios.post(`${API_URL}/api/notis/send-notification`, {
             title: event.title,
             body: event.description,
+            type: now < notificationTime ? "upcoming" : "now",
           });
           console.log(`Notification sent for event: ${event.title}`);
         } catch (error) {
@@ -64,7 +65,7 @@ async function runDailyNotifications(
   suggestionsResponse: any
 ) {
   try {
-    // console.log(eventsResponse);
+    console.log(eventsResponse);
 
     // if (!eventsResponse) return;
     await sendUpcomingEventNotifications(eventsResponse);
