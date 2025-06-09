@@ -61,12 +61,12 @@ const Login = () => {
       setError(null);
 
       // Simulate API call
-      const { data } = await axios.post(`${API_URL}/auth/demo-login`);
+      // const { data } = await axios.post(`${API_URL}/auth/demo-login`);
 
-      if (data.token) {
-        await login(data.token);
-        navigate("/");
-      }
+      // if (data.token) {
+      //   await login(data.token);
+      //   navigate("/");
+      // }
     } catch (err) {
       console.error("Demo login error:", err);
       setError("Demo login failed");

@@ -3,6 +3,7 @@ import { authenticate } from "../middleware/auth";
 import { prisma } from "../index";
 import webpush from "web-push";
 import "dotenv/config";
+import { link } from "fs";
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ webpush.setVapidDetails(
 );
 
 const url = process.env.BACKEND_URL || "http://localhost:3000";
+const front = process.env.CLIENT_URL || "http://localhost:5173";
 
 let subscriptions = [];
 let notifications: any = [];
@@ -106,11 +108,10 @@ router.post("/send-notification", authenticate, async (req, res) => {
       title: title || "New Notification",
       body: rando[Math.floor(Math.random() * rando.length)],
       icon: `${url}/logo.svg`,
+      link: `${front}/auths`,
     });
 
     addNotification(body || title);
-    console.log("Notifications:", notifications);
-
     try {
       const allSubs = await prisma.pushSubscription.findMany();
 

@@ -165,7 +165,7 @@ const Analytics = () => {
     async function fetchData() {
       const { data } = await axios.get(`${API_URL}/api/events`);
       const refined = filterThisWeek(data, currentWeek);
-      setHour(getTotalHours(refined));
+      setHour(getTotalHours(refined).toFixed(1));
       const week = getWeeklyCompletionData(refined);
 
       setWeeklyCompletionData(week);

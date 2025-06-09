@@ -357,7 +357,6 @@ const Goals = () => {
     e.preventDefault();
     setShowNewGoalModal(false);
     const { data } = await axios.post(`${URL}/api/goals`, newGoal);
-    console.log(data);
     setNewGoal({
       title: "",
       description: "",

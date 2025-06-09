@@ -102,7 +102,6 @@ router.post("/send-notification", auth_1.authenticate, async (req, res) => {
       icon: `${url}/logo.svg`,
     });
     addNotification(body || title);
-    console.log("Notifications:", notifications);
     try {
       const allSubs = await index_1.prisma.pushSubscription.findMany();
       await Promise.all(

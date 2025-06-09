@@ -84,7 +84,7 @@ router.post("/demo-login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({ token });
+    res.json({ token: token, demoUser: "yes" });
   } catch (error) {
     console.error("Demo Login Error:", error);
     res.status(500).json({ message: "Login failed" });

@@ -4,7 +4,6 @@ import { API_URL } from "../config";
 // Function to send notification for upcoming events
 async function sendUpcomingEventNotifications(events: [any]) {
   const now = new Date();
-  console.log("trying");
   if (!events) return;
   for (const event of events) {
     if (event.isCompleted || !event.startTime) continue;
@@ -14,7 +13,7 @@ async function sendUpcomingEventNotifications(events: [any]) {
 
     if (now < notificationTime || notificationTime == now) {
       const timeUntilNotification = notificationTime.getTime() - now.getTime();
-      console.log("part of timeUntilNotification", timeUntilNotification);
+      // console.log("part of timeUntilNotification", timeUntilNotification);
 
       setTimeout(async () => {
         try {
@@ -23,7 +22,7 @@ async function sendUpcomingEventNotifications(events: [any]) {
             body: event.description,
             type: now < notificationTime ? "upcoming" : "now",
           });
-          console.log(`Notification sent for event: ${event.title}`);
+          // console.log(`Notification sent for event: ${event.title}`);
         } catch (error) {
           console.error(
             `Failed to send notification for event ${event.title}:`,
@@ -32,9 +31,9 @@ async function sendUpcomingEventNotifications(events: [any]) {
         }
       }, timeUntilNotification);
 
-      console.log(
-        `Scheduled notification for event: ${event.title} at ${notificationTime}`
-      );
+      // console.log(
+      //   `Scheduled notification for event: ${event.title} at ${notificationTime}`
+      // );
     }
   }
 }
@@ -65,15 +64,10 @@ async function runDailyNotifications(
   suggestionsResponse: any
 ) {
   try {
-    console.log(eventsResponse);
-
     // if (!eventsResponse) return;
     await sendUpcomingEventNotifications(eventsResponse);
 
-    // Fetch AI suggestions and send notifications
-
     await sendAiSuggestionNotifications(suggestionsResponse);
-    console.log("done");
   } catch (error) {
     console.error("Error in daily notification processing:", error.message);
   } finally {
