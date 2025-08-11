@@ -8,6 +8,7 @@ import eventRoutes from "./routes/events";
 import goalRoutes from "./routes/goals";
 import aiRoutes from "./routes/ai";
 import subRoute from "./routes/notis";
+import pino from "pino";
 
 // Load environment variables
 dotenv.config();
@@ -29,6 +30,15 @@ app.use(
     credentials: true,
   })
 );
+
+export const logger = pino({
+  transport: {
+    target: "pino-pretty",
+    options: {
+      colorize: true,
+    },
+  },
+});
 
 // Routes
 app.use("/auth", authRoutes);
@@ -61,7 +71,7 @@ app.use(
 
 // Start server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  logger.info(`Server running on port ${port}`);
 });
 
 // Handle graceful shutdown

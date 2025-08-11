@@ -16,6 +16,10 @@ import {
   AlertCircle,
   Clock,
   TrendingUp,
+  Activity,
+  Calendar,
+  Loader2,
+  InfoIcon,
 } from "lucide-react";
 import {
   BarChart,
@@ -30,21 +34,22 @@ import {
   Legend,
   CartesianGrid,
 } from "recharts";
+import { Event } from "../types/index";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { API_URL } from "../config";
-
-// Mock data
 
 const COLORS = ["#8B5CF6", "#3B82F6", "#14B8A6", "#F97316"];
 
 const Analytics = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [goalProgressData, setGoalProgressData] = useState([]);
-  const [weeklyCompletionData, setWeeklyCompletionData] = useState([]);
-  const [hour, setHour] = useState();
-  const [specialEventsData, setSpecialEventsData] = useState([]);
-  const [suggestion, setSuggestion] = useState([]);
+  const [goalProgressData, setGoalProgressData] = useState<any[]>([]);
+  const [weeklyCompletionData, setWeeklyCompletionData] = useState<any[]>([]);
+  const [hour, setHour] = useState<any>();
+  const [specialEventsData, setSpecialEventsData] = useState<any[]>([]);
+  const [suggestion, setSuggestions] = useState([]);
+  const [generatingInsights, setGeneratingInsights] = useState(false);
+  const [totalEvents, setTotalEvents] = useState(0);
 
   const startDate = startOfWeek(currentWeek);
   const endDate = endOfWeek(currentWeek);
@@ -57,6 +62,111 @@ const Analytics = () => {
   //   { day: "Sat", completed: 2, skipped: 0 },
   //   { day: "Sun", completed: 1, skipped: 0 },
   // ];
+
+  function getThisWeekTasks(tasks: Event[]) {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7); // Should be +7 for a week
+    endOfWeek.setHours(0, 0, 0, 0);
+
+    return tasks.filter((task: any) => {
+      const startTime = new Date(task.startTime);
+      return startTime >= startOfWeek && startTime < endOfWeek;
+    });
+  }
+
+  //filter through weekly tasks to get all tasks from the week start till current day
+  function getWeekToDateTasks(tasks: Event[]) {
+    const now = new Date();
+
+    // Start of week (Sunday)
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // End date = today at 23:59:59
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    return tasks.filter((task) => {
+      const startTime = new Date(task.startTime);
+      return startTime >= startOfWeek && startTime <= endOfToday;
+    });
+  }
+
+  // const goalProgressData = [
+  //   { name: "Website Redesign", progress: 30 },
+  //   { name: "Learn Python", progress: 15 },
+  // ];
+
+  // function getTotalHours(tasks) {
+  //   return tasks.reduce((sum, task) => {
+  //     if (!task.startTime || !task.endTime) return sum;
+
+  //     const start = new Date(task.startTime);
+  //     const end = new Date(task.endTime);
+
+  //     const diffInMs = end - start;
+  //     const diffInHours = diffInMs / (1000 * 60 * 60); // Convert milliseconds to hours
+
+  //     return sum + diffInHours;
+  //   }, 0);
+  // }
+
+  async function handleGenerateInsights() {
+    try {
+      setGeneratingInsights(true);
+      const { data } = await axios.get(
+        `${
+          import.meta.env.VITE_API_URL || "http://localhost:3000"
+        }/api/ai/suggestions`
+      );
+      setSuggestions(data);
+      localStorage.setItem("insights", JSON.stringify(data));
+    } catch (error) {
+      console.error("Error generating insights:", error);
+    } finally {
+      setGeneratingInsights(false);
+    }
+  }
+
+  const totalCompleted = weeklyCompletionData.length;
+
+  // const specialEventsData = [
+  //   { name: "Business Networking", value: 3 },
+  //   { name: "Learning Session", value: 4 },
+  //   { name: "Family Time", value: 2 },
+  //   { name: "Personal Project", value: 1 },
+  // ];
+  const nextWeek = () => {
+    const date = new Date(currentWeek);
+    date.setDate(date.getDate() + 7);
+    setCurrentWeek(date);
+  };
+
+  const prevWeek = () => {
+    const date = new Date(currentWeek);
+    date.setDate(date.getDate() - 7);
+    setCurrentWeek(date);
+  };
+
+  function getTotalHours(tasks: Event[]) {
+    return tasks.reduce((sum, task) => {
+      if (!task.startTime || !task.endTime) return sum;
+
+      const start = new Date(task.startTime);
+      const end = new Date(task.endTime);
+
+      const diffInMs = end - start;
+      const diffInHours = diffInMs / (1000 * 60 * 60); // Convert milliseconds to hours
+
+      return sum + diffInHours;
+    }, 0);
+  }
 
   function getWeeklyCompletionData(stepsArray: any) {
     const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -88,12 +198,10 @@ const Analytics = () => {
     return Object.values(weeklyData);
   }
 
-  function getImportantSkippedEvents(events) {
-    const filtered = events.filter((event) => event.skippedIsImportant);
-
+  function getImportantSkippedEvents(events: Event[]) {
     const titleCountMap = {};
 
-    filtered.forEach((event) => {
+    events.forEach((event) => {
       const title = event.skippedReason;
       titleCountMap[title] = (titleCountMap[title] || 0) + 1;
     });
@@ -108,88 +216,41 @@ const Analytics = () => {
     return result;
   }
 
-  // const goalProgressData = [
-  //   { name: "Website Redesign", progress: 30 },
-  //   { name: "Learn Python", progress: 15 },
-  // ];
-  function filterThisWeek(data, currentWeek) {
-    const endDate = new Date(currentWeek);
-    const startDate = new Date(currentWeek);
-    startDate.setDate(endDate.getDate() - 7);
+  useEffect(() => {
+    async function getEvents() {
+      try {
+        const { data } = await axios.get<Event[]>(`${API_URL}/api/events`);
+        const week = getThisWeekTasks(data);
+        setWeeklyCompletionData(
+          getWeekToDateTasks(week).filter((task) => task.isCompleted)
+        );
 
-    return data.filter((item) => {
-      const start = new Date(item.startTime);
-      const end = new Date(item.endTime);
+        setTotalEvents(getWeekToDateTasks(week).length);
+        setSpecialEventsData(
+          getImportantSkippedEvents(week.filter((task) => task.isSpecial))
+        );
 
-      // Task is considered in the week if it overlaps the week window
-      return (
-        (start >= startDate && start <= endDate) ||
-        (end >= startDate && end <= endDate) ||
-        (start <= startDate && end >= endDate) // fully overlaps the window
-      );
-    });
-  }
-  function getTotalHours(tasks) {
-    return tasks.reduce((sum, task) => {
-      if (!task.startTime || !task.endTime) return sum;
-
-      const start = new Date(task.startTime);
-      const end = new Date(task.endTime);
-
-      const diffInMs = end - start;
-      const diffInHours = diffInMs / (1000 * 60 * 60); // Convert milliseconds to hours
-
-      return sum + diffInHours;
-    }, 0);
-  }
-
-  // const specialEventsData = [
-  //   { name: "Business Networking", value: 3 },
-  //   { name: "Learning Session", value: 4 },
-  //   { name: "Family Time", value: 2 },
-  //   { name: "Personal Project", value: 1 },
-  // ];
-  const nextWeek = () => {
-    const date = new Date(currentWeek);
-    date.setDate(date.getDate() + 7);
-    setCurrentWeek(date);
-  };
-
-  const prevWeek = () => {
-    const date = new Date(currentWeek);
-    date.setDate(date.getDate() - 7);
-    setCurrentWeek(date);
-  };
+        setHour(getTotalHours(getWeekToDateTasks(week)).toFixed(1));
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    }
+    getEvents();
+  }, []);
 
   useEffect(() => {
-    async function fetchData() {
-      const { data } = await axios.get(`${API_URL}/api/events`);
-      const refined = filterThisWeek(data, currentWeek);
-      setHour(getTotalHours(refined).toFixed(1));
-      const week = getWeeklyCompletionData(refined);
-
-      setWeeklyCompletionData(week);
-      const specia = getImportantSkippedEvents(refined);
-      setSpecialEventsData(specia);
+    if (localStorage.getItem("insights")) {
+      setSuggestions(JSON.parse(localStorage.getItem("insights") as string));
     }
-    fetchData();
-  }, [currentWeek]);
-
-  useEffect(() => {
-    async function fetchData() {
-      const { data } = await axios.get(`${API_URL}/api/ai/suggestions`);
-      setSuggestion(data);
-    }
-    fetchData();
   }, []);
 
   useEffect(() => {
     async function fetchData() {
       const { data } = await axios.get(`${API_URL}/api/goals`);
       const arr: any = [];
-      data.map((goal) => {
+      data.map((goal: any) => {
         const completedSteps = goal.steps.filter(
-          (step) => step.isCompleted
+          (step: any) => step.isCompleted
         ).length;
         arr.push({
           name: goal.title,
@@ -201,22 +262,17 @@ const Analytics = () => {
     fetchData();
   }, []);
 
-  // Calculate summary metrics
-  const totalCompleted = weeklyCompletionData.reduce(
-    (sum, day) => sum + day.completed,
-    0
-  );
-  const totalSkipped = weeklyCompletionData.reduce(
-    (sum, day) => sum + day.skipped,
-    0
-  );
-  const completionRate = Math.round(
-    (totalCompleted / (totalCompleted + totalSkipped)) * 100
-  );
-  const totalSpecialEvents = specialEventsData.reduce(
-    (sum, item) => sum + item.value,
-    0
-  );
+  // const totalSkipped = weeklyCompletionData.reduce(
+  //   (sum, day) => sum + day.skipped,
+  //   0
+  // );
+  // const completionRate = Math.round(
+  //   (totalCompleted / (totalCompleted + totalSkipped)) * 100
+  // );
+  // const totalSpecialEvents = specialEventsData.reduce(
+  //   (sum, item) => sum + item.value,
+  //   0
+  // );
 
   // Custom tooltip for charts
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -281,9 +337,15 @@ const Analytics = () => {
             <h3 className="text-sm font-medium">Completion Rate</h3>
             <CheckCircle className="h-5 w-5 text-success" />
           </div>
-          <p className="text-2xl font-bold">{completionRate || 0}%</p>
+          <p className="text-2xl font-bold">
+            {totalEvents > 0
+              ? ((totalCompleted / totalEvents) * 100).toFixed(0)
+              : 0}
+            %
+          </p>
           <p className="text-xs text-foreground/70">
-            {totalCompleted} completed, {totalSkipped} skipped
+            {weeklyCompletionData.length} completed, {specialEventsData.length}{" "}
+            skipped
           </p>
         </motion.div>
 
@@ -297,7 +359,12 @@ const Analytics = () => {
             <h3 className="text-sm font-medium">Special Events</h3>
             <AlertCircle className="h-5 w-5 text-warning" />
           </div>
-          <p className="text-2xl font-bold">{totalSpecialEvents}</p>
+          <p className="text-2xl font-bold">
+            {" "}
+            {specialEventsData.length > 0
+              ? `${specialEventsData.length} this week`
+              : 0}
+          </p>
           <p className="text-xs text-foreground/70">
             Activities outside your schedule
           </p>
@@ -314,8 +381,7 @@ const Analytics = () => {
             <Target className="h-5 w-5 text-accent" />
           </div>
           <p className="text-2xl font-bold">
-            {percentage ? (percentage / goalProgressData.length).toFixed(1) : 0}
-            %
+            {percentage ? Math.round(percentage / goalProgressData.length) : 0}%
           </p>
           <p className="text-xs text-foreground/70">Average across all goals</p>
         </motion.div>
@@ -414,7 +480,7 @@ const Analytics = () => {
                 >
                   {specialEventsData.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
+                      key={`cell-${entry}`}
                       fill={COLORS[index % COLORS.length]}
                     />
                   ))}
@@ -481,17 +547,35 @@ const Analytics = () => {
         <div className="space-y-4">
           {suggestion.map((suggestion) => (
             <div key={suggestion.id} className="p-4 bg-secondary rounded-md">
-              <h4 className="font-medium mb-2">{suggestion.type}</h4>
+              <h4 className="font-medium mb-2">
+                {" "}
+                {suggestion.type === "schedule" && (
+                  <Calendar className="h-5 w-5 text-accent shrink-0" />
+                )}
+                {suggestion.type === "goal" && (
+                  <Target className="h-5 w-5 text-accent shrink-0" />
+                )}
+                {suggestion.type === "focus" && (
+                  <Activity className="h-5 w-5 text-accent shrink-0" />
+                )}
+                {suggestion.type === "description" && (
+                  <InfoIcon className="h-5 w-5 text-accent shrink-0" />
+                )}
+              </h4>
               <p className="text-sm">{suggestion.message}</p>
             </div>
           ))}
         </div>
 
         <button
-          disabled
+          onClick={handleGenerateInsights}
           className="w-full mt-4 py-2 text-sm bg-accent/10 text-accent rounded-md hover:bg-accent/20 transition-colors"
         >
-          Generate New Insights
+          {generatingInsights ? (
+            <Loader2 className="w-5 h-5 animate-spin inline-block" />
+          ) : (
+            "Generate New Insights"
+          )}
         </button>
       </motion.div>
     </div>

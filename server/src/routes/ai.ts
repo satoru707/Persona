@@ -83,7 +83,6 @@ router.post("/generate-steps", authenticate, async (req, res) => {
     const { goal, totalDays } = req.body;
 
     const steps = await generateGoalSteps(goal, totalDays);
-
     res.json({ steps });
   } catch (error) {
     console.error("Step Generation Error:", error);

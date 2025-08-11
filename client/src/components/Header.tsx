@@ -245,12 +245,15 @@ const Header = ({ openSidebar }: HeaderProps) => {
                 exit={{ opacity: 0, y: -5 }}
                 className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg py-1 z-10 border border-border"
               >
-                <a
-                  href="/auths/settings"
+                <button
+                  onClick={() => {
+                    navigate("/auths/settings");
+                    setProfileOpen(false);
+                  }}
                   className="block px-4 py-2 text-sm hover:bg-secondary md:inline-fle"
                 >
                   Settings
-                </a>
+                </button>
                 <button
                   className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-secondary"
                   onClick={() => useAuthStore.getState().logout()}

@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Event, Goal, Step } from "@prisma/client";
+import { logger } from "../index";
+const currentDate = new Date().toISOString().split("T")[0];
 
 // Initialize Gemini API
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -42,6 +44,7 @@ export const generateEventSuggestions = async (events: Event[]) => {
     // Extract JSON from the response
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
+      logger.info("Is it in order", JSON.parse(jsonMatch[0]));
       return JSON.parse(jsonMatch[0]);
     }
 
@@ -63,23 +66,27 @@ export const generateGoalSteps = async (goal: Goal, totalDays: number) => {
     const stepCount = 10;
 
     const prompt = `
-      I want to achieve the following goal in ${totalDays} days:
-      Title: ${goal.title}
-      Description: ${goal.description || "N/A"}
-      
-      Please break this down into exactly ${stepCount} steps that are evenly distributed over the ${totalDays} days.
-      Each step should have a order, title, description, and due date.
-      
-      Provide the steps in a JSON array with this format:
-      [
-        {
-          "title": "Step 1 title",
-          "description": "Step 1 description",
-          "dueDate": "YYYY-MM-DD"
-        },
-        ...more steps...
-      ]
-    `;
+     I want to achieve the following goal in ${totalDays} days:
+Title: ${goal.title}
+Description: ${goal.description || "N/A"}
+
+Please break this goal into exactly ${stepCount} steps, with due dates evenly
+ distributed over the ${totalDays} days, starting from the current date (${currentDate})
+ . Each step should include an order (implied by array position), title, description, and due date. 
+ The due date must be a valid date in the format YYYY-MM-DD (e.g., ${currentDate}), 
+ calculated relative to ${currentDate}. The first step’s due date should be on or shortly after ${currentDate}, 
+ and the last step’s due date should be on or before ${totalDays} days from ${currentDate}. Ensure the due dates are spaced 
+ approximately evenly across the time period.
+
+Provide the steps in a JSON array with this format:
+[
+  {
+    "title": "Step 1 title",
+    "description": "Step 1 description",
+    "dueDate": "${currentDate}"
+  },
+  ...more steps...
+]`;
 
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();

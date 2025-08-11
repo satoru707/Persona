@@ -5,9 +5,6 @@ import { useState } from "react";
 
 export default function NewWeek() {
   const [events, setEvents] = useState([]);
-  function handleNo() {
-    // console.log("Bummer");
-  }
 
   async function handleYes() {
     const { data } = await axios.get(`${API_URL}/api/events`);

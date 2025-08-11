@@ -39,8 +39,6 @@ const Login = () => {
         try {
           setIsLoading(true);
           await login(token);
-          // console.log(token);
-          // console.log("here");
           navigate("/auths/");
         } catch (err) {
           console.error("Login error:", err);

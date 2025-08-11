@@ -259,8 +259,8 @@ const Settings = () => {
                   AI suggestion frequency
                 </label>
                 <select className="input w-full">
-                  <option>Daily</option>
-                  <option>Weekly</option>
+                  {/* <option>Daily</option>
+                  <option>Weekly</option> */}
                   <option>Only when I ask</option>
                 </select>
               </div>

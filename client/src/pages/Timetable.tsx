@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import {
@@ -14,18 +12,6 @@ import {
 import { motion } from "framer-motion";
 import { Event } from "../types";
 import axios from "axios";
-
-// Create base dates for events
-// const today = new Date();
-// const tomorrow = new Date();
-// tomorrow.setDate(today.getDate() + 1);
-
-// Helper function to create event times
-// const createEventTime = (date: Date, hours: number, minutes: number) => {
-//   const newDate = new Date(date);
-//   newDate.setHours(hours, minutes, 0, 0);
-//   return newDate;
-// };
 
 const BACKURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -102,14 +88,10 @@ const Timetable = () => {
   const [skipps, setSkipps] = useState("");
   const [show, setShow] = useState(false);
   const [important, setImportant] = useState(false);
-  // console.log(newEvent, "new event");
 
   useEffect(() => {
-    //send request to get events to display
     async function getEvents() {
       const eve = await axios.get(`${BACKURL}/api/events`);
-      // console.log(eve.data);
-
       setEvents(eve.data);
     }
     getEvents();
@@ -121,16 +103,13 @@ const Timetable = () => {
     handleSkipEvent,
   ]);
 
-  // Generate week days
   const startOfCurrentWeek = startOfWeek(selectedDate, { weekStartsOn: 0 });
   const weekDays = [...Array(7)].map((_, i) => addDays(startOfCurrentWeek, i));
 
-  // Get events for selected date
   const eventsForSelectedDate = events?.filter((event) =>
     isSameDay(new Date(event.startTime), selectedDate)
   );
 
-  // Handle event click
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
     setShowEventDetailsModal(true);
@@ -138,12 +117,12 @@ const Timetable = () => {
 
   async function handleNewEvent(e: any) {
     e.preventDefault();
-    // console.log("SEND API REQUEST.");
     if (!newEvent.title || !newEvent.startTime || !newEvent.endTime) {
       alert("Please fill out all fields");
       return;
     }
     setShowNewEventModal(false);
+
     await axios.post(`${BACKURL}/api/events`, newEvent);
     setNewEvent({
       title: "",

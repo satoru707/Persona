@@ -19,10 +19,10 @@ export interface Event {
 }
 
 export interface Goal {
-  id: string;
+  id: string | number;
   title: string;
-  description?: string;
-  totalDays: number;
+  description?: string | undefined;
+  totalDays: number | undefined;
   createdAt: Date | string;
   userId: string;
   steps: Step[];
@@ -34,7 +34,7 @@ export interface Step {
   description?: string;
   dueDate: Date | string;
   isCompleted: boolean;
-  goalId: string;
+  goalId?: string;
 }
 
 export interface WeeklySchedule {
@@ -59,5 +59,5 @@ export interface AnalyticsData {
 
 export interface AiSuggestion {
   message: string;
-  type: 'schedule' | 'goal' | 'focus';
+  type: "schedule" | "goal" | "focus";
 }

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Moon, Sun, Menu, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -100,12 +102,12 @@ const Navbar: React.FC = () => {
           >
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <a
-            href="/login"
+          <button
             className="bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            onClick={() => navigate("/login")}
           >
             Get Started
-          </a>
+          </button>
         </div>
 
         <div className="flex items-center md:hidden">

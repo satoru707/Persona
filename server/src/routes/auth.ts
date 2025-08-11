@@ -54,7 +54,6 @@ router.get("/google/callback", async (req, res) => {
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
-    // console.log("token", token);
     return res.redirect(`${FRONTEND_URL}/login?token=${token}`);
   } catch (error) {
     console.error("Google Auth Error:", error);

@@ -91,10 +91,21 @@ router.post("/", authenticate, async (req, res) => {
       },
     });
 
+    const sortStepsByTitleNumber = (steps: any) => {
+      return [...steps].sort((a, b) => {
+        const getNumber = (title: string) => {
+          const match = title.match(/\d+/);
+          return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER;
+        };
+
+        return getNumber(a.title) - getNumber(b.title);
+      });
+    };
+
     // If steps are provided, create them
     if (Array.isArray(steps) && steps.length > 0) {
       await Promise.all(
-        steps.map(async (step: any) => {
+        sortStepsByTitleNumber(steps).map(async (step: any) => {
           await prisma.step.create({
             data: {
               title: step.title,

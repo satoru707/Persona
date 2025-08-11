@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { Calendar, Target, BarChart3, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection: React.FC = () => {
   const heroRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -52,9 +54,12 @@ const HeroSection: React.FC = () => {
               help you optimize your time and achieve what matters most.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="/login" className="btn-primary text-center">
+              <button
+                onClick={() => navigate("/login")}
+                className="btn-primary text-center"
+              >
                 Start Free Trial
-              </a>
+              </button>
               <a href="#features" className="btn-secondary text-center">
                 Explore Features
               </a>
