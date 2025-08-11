@@ -17,6 +17,7 @@ model User {
 
   events    Event[]
   goals     Goal[]
+  notifications Notification[] // Relation to Notification model
 }
 
 model Event {
@@ -60,5 +61,15 @@ model PushSubscription {
   endpoint    String   @unique
   auth        String
   p256dh      String
+  userId      String   // Added to associate with User
   createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }

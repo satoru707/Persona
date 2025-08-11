@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "prisma generate && prisma migrate deploy && ts-node-dev --respawn --transpile-only src/index.ts | pino-pretty",
     "build": "tsc",
-    "start": "prisma generate && prisma migrate deploy && node dist/index.js",
+    "start": "prisma generate && prisma migrate deploy && npm run build &&node dist/index.js",
     "postinstall": "prisma generate",
     "prisma": "prisma",
     "migrate": "prisma migrate dev",

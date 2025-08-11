@@ -92,6 +92,8 @@ const Timetable = () => {
   useEffect(() => {
     async function getEvents() {
       const eve = await axios.get(`${BACKURL}/api/events`);
+      // console.log(eve.data);
+
       setEvents(eve.data);
     }
     getEvents();

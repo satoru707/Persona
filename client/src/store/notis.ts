@@ -1,78 +1,90 @@
 import axios from "axios";
 import { API_URL } from "../config";
 
-// Function to send notification for upcoming events
-async function sendUpcomingEventNotifications(events: [any]) {
-  const now = new Date();
-  if (!events) return;
-  for (const event of events) {
-    if (event.isCompleted || !event.startTime) continue;
-
-    const startTime = new Date(event.startTime);
-    const notificationTime = new Date(startTime.getTime() - 10 * 60 * 1000); // 10 mins before
-
-    if (now < notificationTime || notificationTime == now) {
-      const timeUntilNotification = notificationTime.getTime() - now.getTime();
-      // console.log("part of timeUntilNotification", timeUntilNotification);
-
-      setTimeout(async () => {
-        try {
-          await axios.post(`${API_URL}/api/notis/send-notification`, {
-            title: event.title,
-            body: event.description,
-            type: now < notificationTime ? "upcoming" : "now",
-          });
-          // console.log(`Notification sent for event: ${event.title}`);
-        } catch (error) {
-          console.error(
-            `Failed to send notification for event ${event.title}:`,
-            error.message
-          );
-        }
-      }, timeUntilNotification);
-
-      // console.log(
-      //   `Scheduled notification for event: ${event.title} at ${notificationTime}`
-      // );
-    }
-  }
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  isCompleted: boolean;
+  skippedReason: string | null;
+  skippedIsImportant: boolean;
+  isSpecial: boolean;
+  userId: string;
 }
 
-// Function to send AI suggestion notifications
-async function sendAiSuggestionNotifications(suggestions: [any]) {
-  setTimeout(async () => {
-    for (const suggestion of suggestions) {
+const sendTaskNotifications = async (tasks: Task[]): Promise<void> => {
+  const sentNotifications = JSON.parse(
+    localStorage.getItem("sentNotifications") || "[]"
+  ) as string[];
+
+  const now = new Date();
+  const TEN_MINUTES_MS = 10 * 60 * 1000;
+  const ONE_MINUTE_MS = 60 * 1000;
+
+  // Filter tasks for today to optimize
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const tasksToday = tasks.filter((task) => {
+    const startTime = new Date(task.startTime);
+    return startTime >= today && startTime < tomorrow;
+  });
+
+  for (const task of tasksToday) {
+    const startTime = new Date(task.startTime);
+    const timeDiff = startTime.getTime() - now.getTime();
+
+    if (sentNotifications.includes(task.id)) {
+      continue;
+    }
+
+    let notificationType: "upcoming" | "now" | null = null;
+    if (
+      timeDiff <= TEN_MINUTES_MS &&
+      timeDiff > TEN_MINUTES_MS - ONE_MINUTE_MS
+    ) {
+      notificationType = "upcoming";
+    } else if (timeDiff <= 0 && timeDiff > -ONE_MINUTE_MS) {
+      notificationType = "now";
+    }
+
+    if (notificationType) {
       try {
-        await axios.post(`${API_URL}/api/notis/send-notification`, {
-          title:
-            suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1),
-          body: suggestion.message,
-        });
-      } catch (error) {
-        console.error(
-          `Failed to send notification for ${suggestion.type} suggestion:`,
-          error.message
+        const response = await axios.post(
+          `${API_URL}/api/notis/send-notification`,
+          {
+            title: task.title,
+            body: task.description || `Event: ${task.title}`,
+            type: notificationType,
+            userId: task.userId,
+          }
         );
+        console.log(`Notification sent for task ${task.id}:`, response.data);
+
+        sentNotifications.push(task.id);
+        localStorage.setItem(
+          "sentNotifications",
+          JSON.stringify(sentNotifications)
+        );
+      } catch (error) {
+        console.error(`Error sending notification for task ${task.id}:`, error);
       }
     }
-  }, 1000 * 60 * 60);
-}
-
-// Main function that runs every 24 hours
-async function runDailyNotifications(
-  eventsResponse: any,
-  suggestionsResponse: any
-) {
-  try {
-    // if (!eventsResponse) return;
-    await sendUpcomingEventNotifications(eventsResponse);
-
-    await sendAiSuggestionNotifications(suggestionsResponse);
-  } catch (error) {
-    console.error("Error in daily notification processing:", error.message);
-  } finally {
-    setTimeout(runDailyNotifications, 3 * 1000);
   }
-}
+};
+
+const runDailyNotifications = async (
+  tasks: Task[],
+  intervalMs: number = 60000
+): Promise<NodeJS.Timeout> => {
+  await sendTaskNotifications(tasks);
+  const interval = setInterval(() => {
+    sendTaskNotifications(tasks);
+  }, intervalMs);
+  return interval;
+};
 
 export default runDailyNotifications;

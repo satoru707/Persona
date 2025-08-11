@@ -3,7 +3,6 @@ import { authenticate } from "../middleware/auth";
 import { prisma } from "../index";
 import webpush from "web-push";
 import "dotenv/config";
-import { link } from "fs";
 
 const router = express.Router();
 
@@ -12,18 +11,19 @@ const vapidKeys = {
   privateKey: process.env.PRIVATE_KEY,
 };
 
+if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
+  throw new Error("VAPID keys are not defined in environment variables");
+}
+
 webpush.setVapidDetails(
   "mailto:petolulope7@gmail.com",
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
 
-const url = process.env.BACKEND_URL || "http://localhost:3000";
 const front = process.env.CLIENT_URL || "http://localhost:5173";
 
-let subscriptions = [];
-let notifications: any = [];
-function formatTimeAgo(timestamp: any) {
+function formatTimeAgo(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
 
@@ -37,57 +37,56 @@ function formatTimeAgo(timestamp: any) {
   return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
-function cleanOldNotifications() {
-  const now = Date.now();
-  const threeDaysInMs = 1000 * 60 * 60 * 24 * 3;
-  for (let i = notifications.length - 1; i >= 0; i--) {
-    if (now - notifications[i].timestamp > threeDaysInMs) {
-      notifications.splice(i, 1);
-    }
-  }
-}
-
-function addNotification(body) {
-  const timestamp = Date.now();
-  cleanOldNotifications();
-
-  notifications.push({ body, timestamp });
-}
-
-function getFormattedNotifications() {
+async function getFormattedNotifications(userId: string) {
+  const notifications = await prisma.notification.findMany({
+    where: { userId },
+    orderBy: { timestamp: "desc" },
+  });
   return notifications.map((noti) => ({
+    id: noti.id,
+    title: noti.title,
     body: noti.body,
-    timeAgo: formatTimeAgo(noti.timestamp),
+    timeAgo: formatTimeAgo(noti.timestamp.getTime()),
   }));
 }
+
+router.get("/public-key", (req, res) => {
+  res.json({ publicKey: vapidKeys.publicKey });
+});
 
 router.post("/save-subscription", authenticate, async (req, res) => {
   const { subscription } = req.body;
   const parsedSubscription = JSON.parse(subscription);
   const { endpoint, keys } = parsedSubscription;
+  const userId = req.user?.id; // From authenticate middleware
+
+  if (!userId) {
+    return res.status(401).json({ error: "User not authenticated" });
+  }
 
   try {
     await prisma.pushSubscription.upsert({
       where: { endpoint },
-      update: { auth: keys?.auth, p256dh: keys?.p256dh },
+      update: { auth: keys?.auth, p256dh: keys?.p256dh, userId },
       create: {
         endpoint,
         auth: keys.auth,
         p256dh: keys.p256dh,
+        userId,
       },
     });
 
     res.status(201).json({ message: "Subscription saved" });
   } catch (err) {
-    console.error("Save error:", err);
+    console.error("Save subscription error:", err);
     res.status(500).json({ error: "Failed to save subscription" });
   }
 });
 
 router.post("/send-notification", authenticate, async (req, res) => {
-  const { title, body, type } = req.body;
+  const { title, body, type, userId } = req.body;
   const rando =
-    type == "upcoming"
+    type === "upcoming"
       ? [
           "Your scheduled event is about to begin. Don't miss it!",
           "Just a reminder — your event starts in a few minutes.",
@@ -103,44 +102,63 @@ router.post("/send-notification", authenticate, async (req, res) => {
           "The countdown's over — your activity begins now",
         ];
 
-  setTimeout(async () => {
-    const payload = JSON.stringify({
-      title: title || "New Notification",
-      body: rando[Math.floor(Math.random() * rando.length)],
-      icon: `${url}/logo.svg`,
-      link: `${front}/auths`,
+  const payload = JSON.stringify({
+    title: title || "New Notification",
+    body: body || rando[Math.floor(Math.random() * rando.length)],
+    icon: `${front}/logo.svg`,
+    link: `${front}/auths`,
+  });
+
+  try {
+    // Store the notification
+    const notification = await prisma.notification.create({
+      data: {
+        userId,
+        title: title || "New Notification",
+        body: body || rando[Math.floor(Math.random() * rando.length)],
+      },
     });
 
-    addNotification(body || title);
-    try {
-      const allSubs = await prisma.pushSubscription.findMany();
+    const subscriptions = await prisma.pushSubscription.findMany({
+      where: { userId },
+    });
 
-      await Promise.all(
-        allSubs.map((sub) => {
-          const pushConfig = {
-            endpoint: sub.endpoint,
-            keys: {
-              auth: sub.auth,
-              p256dh: sub.p256dh,
-            },
-          };
-          return webpush.sendNotification(pushConfig, payload).catch((err) => {
-            console.error("Send error:", err);
-          });
-        })
-      );
+    await Promise.all(
+      subscriptions.map((sub) => {
+        const pushConfig = {
+          endpoint: sub.endpoint,
+          keys: {
+            auth: sub.auth,
+            p256dh: sub.p256dh,
+          },
+        };
+        return webpush.sendNotification(pushConfig, payload).catch((err) => {
+          console.error(`Send error for subscription ${sub.endpoint}:`, err);
+        });
+      })
+    );
 
-      res.status(200).json({ message: "Notifications sent" });
-    } catch (err) {
-      console.error("Notification error:", err);
-      res.sendStatus(500);
-    }
-  }, 30000);
+    res
+      .status(200)
+      .json({ message: "Notifications sent", notificationId: notification.id });
+  } catch (err) {
+    console.error("Notification error:", err);
+    res.status(500).json({ error: "Failed to send notifications" });
+  }
 });
 
-router.get("/notis", authenticate, async (req, res) => {
-  const notis = getFormattedNotifications();
-  res.json(notis);
+router.get("/", authenticate, async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "User not authenticated" });
+  }
+  try {
+    const notis = await getFormattedNotifications(userId);
+    res.json(notis);
+  } catch (err) {
+    console.error("Fetch notifications error:", err);
+    res.status(500).json({ error: "Failed to fetch notifications" });
+  }
 });
 
 export default router;

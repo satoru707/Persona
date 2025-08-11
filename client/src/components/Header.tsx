@@ -19,18 +19,23 @@ interface HeaderProps {
   openSidebar: () => void;
 }
 
+interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  timeAgo: string;
+}
+
 const Header = ({ openSidebar }: HeaderProps) => {
   const { theme, toggleTheme } = useThemeStore();
   const { user } = useAuthStore();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notis, setNotis] = useState([]);
+  const [notis, setNotis] = useState<Notification[]>([]);
   const [number, setNumber] = useState(3);
   const [profileOpen, setProfileOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
-  // console.log(user);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -55,25 +60,43 @@ const Header = ({ openSidebar }: HeaderProps) => {
 
   useEffect(() => {
     async function getNotis() {
-      const { data } = await axios.get(`${API_URL}/api/notis/notis`);
-      setNotis(data);
+      try {
+        const { data } = await axios.get<Notification[]>(
+          `${API_URL}/api/notis`
+        );
+        setNotis(data);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
     }
     getNotis();
   }, []);
+
   const navigate = useNavigate();
 
-  const publicVapidKey =
-    "BD6B4nGsTj9potclGJfdWsypAbDEfAnjvXDh6BBb2RshaSJx19kWAQWSr-4rUwFm2LbpqJS9v4hKtn4UXW8BNVo";
-
   async function subscribeUser() {
-    const registration = await navigator.serviceWorker.register("/sw.js");
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
-    });
-    await axios.post(`${API_URL}/api/notis/save-subscription`, {
-      subscription: JSON.stringify(subscription),
-    });
+    try {
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      const existingSubscription =
+        await registration.pushManager.getSubscription();
+      if (existingSubscription) {
+        return; // Already subscribed
+      }
+
+      const {
+        data: { publicKey },
+      } = await axios.get(`${API_URL}/api/notis/public-key`);
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+
+      await axios.post(`${API_URL}/api/notis/save-subscription`, {
+        subscription: JSON.stringify(subscription),
+      });
+    } catch (error) {
+      console.error("Error subscribing user:", error);
+    }
   }
 
   function urlBase64ToUint8Array(base64String: string) {
@@ -86,12 +109,17 @@ const Header = ({ openSidebar }: HeaderProps) => {
     return new Uint8Array([...raw].map((char) => char.charCodeAt(0)));
   }
 
-  // Call this after asking for notification permission:
-  Notification.requestPermission().then((permission) => {
-    if (permission === "granted") {
+  useEffect(() => {
+    if (Notification.permission === "granted") {
       subscribeUser();
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          subscribeUser();
+        }
+      });
     }
-  });
+  }, []);
 
   return (
     <header className="py-4 px-6 bg-card border-b border-border flex items-center justify-between">
@@ -132,7 +160,6 @@ const Header = ({ openSidebar }: HeaderProps) => {
           </button>
         </h1>
       </div>
-      {/* check internet connection */}
 
       <div className="flex items-center gap-4">
         <button
@@ -149,7 +176,7 @@ const Header = ({ openSidebar }: HeaderProps) => {
         </button>
         <button onClick={() => navigate("/auths/analytics")}>
           <BarChart className="hidden md:inline-flex" />
-        </button>{" "}
+        </button>
         <button
           className="p-2 rounded-md hover:bg-secondary"
           onClick={toggleTheme}
@@ -163,15 +190,13 @@ const Header = ({ openSidebar }: HeaderProps) => {
         <div className="relative" ref={notificationsRef}>
           <button
             className="p-2 rounded-md hover:bg-secondary relative"
-            onClick={() => {
-              subscribeUser();
-              setNotificationsOpen(!notificationsOpen);
-            }}
+            onClick={() => setNotificationsOpen(!notificationsOpen)}
           >
             <BellRing className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-accent"></span>
+            {notis.length > 0 && (
+              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-accent"></span>
+            )}
           </button>
-          {/* Notification request to /api/events/upcoming at the backend */}
           <AnimatePresence>
             {notificationsOpen && (
               <motion.div
@@ -187,12 +212,13 @@ const Header = ({ openSidebar }: HeaderProps) => {
                   <div className="max-h-60 overflow-y-auto">
                     {[...notis]
                       .reverse()
-                      .splice(0, number)
-                      .map((noti, index) => (
+                      .slice(0, number)
+                      .map((noti) => (
                         <div
-                          key={index}
+                          key={noti.id}
                           className="py-2 px-4 hover:bg-secondary"
                         >
+                          <p className="text-sm font-medium">{noti.title}</p>
                           <p className="text-sm">{noti.body}</p>
                           <p className="text-xs text-foreground/70 mt-1">
                             {noti.timeAgo}
@@ -202,13 +228,13 @@ const Header = ({ openSidebar }: HeaderProps) => {
                   </div>
                 ) : (
                   <div className="py-2 px-4">
-                    <p className="text-sm">Watch JuJustu kaisen today!</p>
+                    <p className="text-sm">No notifications</p>
                   </div>
                 )}
                 <button
                   onClick={() => setNumber(notis.length)}
-                  className="block text-center text-sm text-accent  border-t px-4 py-2 border-b border-border"
-                  {...(!notis.length && { disabled: true })}
+                  className="block text-center text-sm text-accent border-t px-4 py-2 border-b border-border"
+                  disabled={!notis.length}
                 >
                   View all notifications
                 </button>
@@ -229,7 +255,7 @@ const Header = ({ openSidebar }: HeaderProps) => {
                   alt="Profile"
                 />
               ) : (
-                user?.name.charAt(0) || "U"
+                user?.name?.charAt(0) || "U"
               )}
             </div>
             <span className="hidden md:block text-sm font-medium">
@@ -250,7 +276,7 @@ const Header = ({ openSidebar }: HeaderProps) => {
                     navigate("/auths/settings");
                     setProfileOpen(false);
                   }}
-                  className="block px-4 py-2 text-sm hover:bg-secondary md:inline-fle"
+                  className="block px-4 py-2 text-sm hover:bg-secondary"
                 >
                   Settings
                 </button>
