@@ -4,6 +4,11 @@
 
 [View Live Site](https://timeforge-eight.vercel.app)
 
+## Note
+This was my first project using TypeScript and one of my earliest coding experiences. At the time, I was still figuring out how to structure code — so functions ended up scattered across multiple files and the organization wasn’t the cleanest. I later did a light cleanup just because I was bored, so while it may still look messy now, trust me, it was **much worse** before.
+
+The project is open for further cleanup and refactoring, especially now that I’ve learned better coding practices.
+
 ## Features
 
 - **AI-Enhanced Planning** – Breaks down goals into actionable steps with deadlines
@@ -12,7 +17,6 @@
 - **Goal Tracking** – Monitor progress and track completion status
 - **Event Notifications** – Sends reminders 10 minutes before any event
 - **Adaptive Suggestions** – Prompts for alternative activities when goals are missed
-- **Special Event Detection** – Automatically identifies and highlights significant events
 
 ## Tech Stack
 
@@ -46,4 +50,5 @@ npm start
 cd server
 npm install
 npm start
+
 
