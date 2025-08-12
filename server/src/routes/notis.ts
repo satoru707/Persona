@@ -85,6 +85,8 @@ router.post("/save-subscription", authenticate, async (req, res) => {
 
 router.post("/send-notification", authenticate, async (req, res) => {
   const { title, body, type, userId } = req.body;
+  console.log("The request happned", title, body, type, userId);
+
   const rando =
     type === "upcoming"
       ? [
@@ -108,6 +110,7 @@ router.post("/send-notification", authenticate, async (req, res) => {
     icon: `${front}/logo.svg`,
     link: `${front}/auths`,
   });
+  console.log("The payload", payload);
 
   try {
     // Store the notification
@@ -118,6 +121,7 @@ router.post("/send-notification", authenticate, async (req, res) => {
         body: body || rando[Math.floor(Math.random() * rando.length)],
       },
     });
+    console.log("The notification", notification);
 
     const subscriptions = await prisma.pushSubscription.findMany({
       where: { userId },
@@ -154,6 +158,8 @@ router.get("/", authenticate, async (req, res) => {
   }
   try {
     const notis = await getFormattedNotifications(userId);
+    console.log("All notis", notis);
+
     res.json(notis);
   } catch (err) {
     console.error("Fetch notifications error:", err);

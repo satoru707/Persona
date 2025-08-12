@@ -94,7 +94,7 @@ const Dashboard = () => {
   const [generatingInsights, setGeneratingInsights] = useState(false);
   const [totalEvents, setTotalEvents] = useState(0);
   const hasFetched = useRef(false);
-  const notificationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const notificationIntervalRef = useRef(null);
 
   function getThisWeekTasks(tasks: Task[]) {
     const now = new Date();
@@ -171,7 +171,10 @@ const Dashboard = () => {
           `${API_URL}/api/events/upcoming`
         );
         hasFetched.current = true;
+
         notificationIntervalRef.current = await runDailyNotifications(data);
+        // await runDailyNotifications(data);
+        console.log("Data", data);
         setUpcoming(data);
       } catch (error) {
         console.error("Error fetching upcoming events:", error);

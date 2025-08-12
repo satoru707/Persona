@@ -64,6 +64,7 @@ const Header = ({ openSidebar }: HeaderProps) => {
         const { data } = await axios.get<Notification[]>(
           `${API_URL}/api/notis`
         );
+        console.log("Notis", data);
         setNotis(data);
       } catch (error) {
         console.error("Error fetching notifications:", error);

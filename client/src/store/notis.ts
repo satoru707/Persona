@@ -32,14 +32,20 @@ const sendTaskNotifications = async (tasks: Task[]): Promise<void> => {
     const startTime = new Date(task.startTime);
     return startTime >= today && startTime < tomorrow;
   });
+  console.log("Sent notifcation", sentNotifications);
 
   for (const task of tasksToday) {
+    console.log("Looping through tasks", task);
     const startTime = new Date(task.startTime);
     const timeDiff = startTime.getTime() - now.getTime();
+    console.log("time diff err", timeDiff, startTime, now);
 
     if (sentNotifications.includes(task.id)) {
+      console.log("Task already sent");
+
       continue;
     }
+    console.log("Getting here", timeDiff, TEN_MINUTES_MS, ONE_MINUTE_MS);
 
     let notificationType: "upcoming" | "now" | null = null;
     if (
@@ -49,7 +55,9 @@ const sendTaskNotifications = async (tasks: Task[]): Promise<void> => {
       notificationType = "upcoming";
     } else if (timeDiff <= 0 && timeDiff > -ONE_MINUTE_MS) {
       notificationType = "now";
-    }
+    } 
+
+    console.log("Notification type", notificationType);
 
     if (notificationType) {
       try {
@@ -57,7 +65,7 @@ const sendTaskNotifications = async (tasks: Task[]): Promise<void> => {
           `${API_URL}/api/notis/send-notification`,
           {
             title: task.title,
-            body: task.description || `Event: ${task.title}`,
+            body: task?.description,
             type: notificationType,
             userId: task.userId,
           }
@@ -81,6 +89,7 @@ const runDailyNotifications = async (
   intervalMs: number = 60000
 ): Promise<NodeJS.Timeout> => {
   await sendTaskNotifications(tasks);
+  console.log("The tasks", tasks);
   const interval = setInterval(() => {
     sendTaskNotifications(tasks);
   }, intervalMs);
